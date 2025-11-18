@@ -174,11 +174,75 @@ claude-cli-gateway/
         "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
         "ANTHROPIC_AUTH_TOKEN": "your-token"
       }
+    },
+    "qwen": {
+      "name": "阿里百炼 Qwen",
+      "cli": "claude",
+      "env": {
+        "ANTHROPIC_API_KEY": "your-bailian-api-key",
+        "ANTHROPIC_BASE_URL": "https://dashscope.aliyuncs.com/apps/anthropic",
+        "ANTHROPIC_MODEL": "qwen3-max",
+        "ANTHROPIC_SMALL_FAST_MODEL": "qwen-flash"
+      }
     }
   },
   "default": "minimax"
 }
 ```
+
+**配置字段说明**：
+- `name`: Profile 的显示名称
+- `cli`: 使用的 CLI 工具（可选，"claude" 或 "codex"，默认 "claude"）
+- `env`: 环境变量配置
+  - `ANTHROPIC_API_KEY` 或 `ANTHROPIC_AUTH_TOKEN`: API 密钥
+  - `ANTHROPIC_BASE_URL`: API 端点地址
+  - `ANTHROPIC_MODEL`: 默认模型
+  - `ANTHROPIC_SMALL_FAST_MODEL`: 快速模型（可选）
+
+#### Codex CLI 配置示例
+
+如果你想使用原生的 OpenAI Codex CLI（GPT-4.1），只需在 profile 中添加 `"cli": "codex"` 字段。由于 Codex CLI 已在本地配置好，不需要设置额外的环境变量：
+
+```json
+{
+  "profiles": {
+    "codex": {
+      "name": "OpenAI Codex (GPT-4.1)",
+      "cli": "codex",
+      "env": {}
+    }
+  },
+  "default": "codex"
+}
+```
+
+**使用 Codex CLI**：
+```bash
+# 使用 Codex profile
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "写一个 Python 快速排序",
+    "profile": "codex"
+  }'
+
+# 或者在请求中临时指定使用 codex（覆盖 profile 配置）
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "写一个 Python 快速排序",
+    "profile": "qwen",
+    "cli": "codex"
+  }'
+```
+
+**注意**：
+- Codex CLI 需要预先在本地配置好（通过 `codex login` 等命令）
+- 网关会调用 `codex exec --model gpt-5.1 --sandbox danger-full-access` 命令
+- `--sandbox danger-full-access` 参数允许 Codex 联网访问
+- 使用你本地配置的 Codex 认证信息
+- 不需要在 `env` 中配置任何 API 密钥或端点
+- Codex 返回纯文本格式（不是 JSON）
 
 #### 使用不同配置
 

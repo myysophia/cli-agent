@@ -31,6 +31,24 @@
         "ANTHROPIC_MODEL": "kimi-for-coding",
         "ANTHROPIC_SMALL_FAST_MODEL": "kimi-for-coding"
       }
+    },
+    "qwen": {
+      "name": "阿里百炼 Qwen",
+      "cli": "claude",
+      "env": {
+        "ANTHROPIC_API_KEY": "your-bailian-api-key-here",
+        "ANTHROPIC_BASE_URL": "https://dashscope.aliyuncs.com/apps/anthropic",
+        "ANTHROPIC_MODEL": "qwen3-max",
+        "ANTHROPIC_SMALL_FAST_MODEL": "qwen-flash"
+      }
+    },
+    "codex-example": {
+      "name": "Codex Example",
+      "cli": "codex",
+      "env": {
+        "ANTHROPIC_BASE_URL": "https://api.example.com/anthropic",
+        "ANTHROPIC_AUTH_TOKEN": "your-codex-token-here"
+      }
     }
   },
   "default": "minimax"

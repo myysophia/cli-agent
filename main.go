@@ -52,6 +52,7 @@ func main() {
 	
 	// 使用 http.HandleFunc 注册 "/invoke" 路由到 handleInvoke
 	http.HandleFunc("/invoke", handleInvoke)
+	http.HandleFunc("/chat", handleChat)
 	
 	// 打印启动日志
 	log.Println("🌐 Gateway service starting on :8080")
