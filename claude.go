@@ -99,12 +99,12 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 			log.Printf("🎯 Using system prompt: %s", truncate(systemPrompt, 50))
 		}
 		
-		// 添加 Skills 支持
+		// 添加 Skills 支持（使用 --add-dir 参数）
 		if globalConfig != nil {
 			profile, err := globalConfig.getProfile(profileName)
 			if err == nil && len(profile.Skills) > 0 {
 				for _, skill := range profile.Skills {
-					args = append(args, "--skill", skill)
+					args = append(args, "--add-dir", skill)
 				}
 				log.Printf("📚 Using %d skill(s): %v", len(profile.Skills), profile.Skills)
 			}
@@ -122,7 +122,7 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 		if err != nil {
 			log.Printf("⚠️  %v, using default environment", err)
 		} else {
-			log.Printf("🔧 Using profile: %s (%s)", profileName, profile.Name)
+			// log.Printf("🔧 Using profile: %s (%s)", profileName, profile.Name)
 			// 设置环境变量
 			cmd.Env = append(cmd.Env, "PATH="+os.Getenv("PATH"))
 			for key, value := range profile.Env {
@@ -146,7 +146,7 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	
 	// Codex CLI 直接返回文本，不是 JSON
 	if cliName == "codex" {
-		log.Printf("✨ Codex result preview: %s", truncate(outputStr, 100))
+		// log.Printf("✨ Codex result preview: %s", truncate(outputStr, 100))
 		return strings.TrimSpace(outputStr), nil
 	}
 	

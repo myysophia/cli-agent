@@ -4,12 +4,15 @@
 
 ## 功能特性
 
-- 提供 HTTP POST 接口 `/invoke` 接收对话请求
-- 自动将对话历史转换为 Claude CLI 的 prompt 格式
+- 提供 HTTP POST 接口 `/invoke` 和 `/chat` 接收对话请求
+- 自动将对话历史转换为 CLI 的 prompt 格式
 - 支持系统提示词（system prompt）
-- 调用 Claude CLI 无头模式（`--print`）获取响应
+- 支持多种 CLI 工具（Claude CLI 和 Codex CLI）
+- 支持 Claude Skills（访问本地文件和目录）
+- 调用 CLI 无头模式获取响应
 - 返回 JSON 格式的结果
-- 默认启用 WebSearch 工具
+- 默认启用 WebSearch 工具（Claude CLI）
+- 支持多配置 profile 管理
 
 ## 使用场景
 
@@ -420,6 +423,12 @@ console.log(data.answer);
 - 确认请求的 Content-Type 为 `application/json`
 - 检查 JSON 格式是否正确
 - 确保 messages 数组不为空
+
+## 相关文档
+
+- [Claude Skills 使用指南](./SKILLS.md) - 详细的 Skills 配置和使用说明
+- [配置示例](./configs.example.json) - 各种配置场景的示例
+- [更新日志](./CHANGELOG.md) - 版本更新记录
 
 ## 许可证
 
