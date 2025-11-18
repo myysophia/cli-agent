@@ -98,6 +98,17 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 			args = append(args, "--append-system-prompt", systemPrompt)
 			log.Printf("🎯 Using system prompt: %s", truncate(systemPrompt, 50))
 		}
+		
+		// 添加 Skills 支持
+		if globalConfig != nil {
+			profile, err := globalConfig.getProfile(profileName)
+			if err == nil && len(profile.Skills) > 0 {
+				for _, skill := range profile.Skills {
+					args = append(args, "--skill", skill)
+				}
+				log.Printf("📚 Using %d skill(s): %v", len(profile.Skills), profile.Skills)
+			}
+		}
 	}
 	
 	log.Printf("⚙️  Executing: %s %s", cliName, strings.Join(args, " "))

@@ -193,11 +193,56 @@ claude-cli-gateway/
 **配置字段说明**：
 - `name`: Profile 的显示名称
 - `cli`: 使用的 CLI 工具（可选，"claude" 或 "codex"，默认 "claude"）
+- `skills`: Claude Skills 列表（可选，仅 Claude CLI 支持）
+  - 可以是目录路径或文件路径
+  - Claude 会读取这些路径下的内容作为上下文
+  - 支持多个 skill 路径
 - `env`: 环境变量配置
   - `ANTHROPIC_API_KEY` 或 `ANTHROPIC_AUTH_TOKEN`: API 密钥
   - `ANTHROPIC_BASE_URL`: API 端点地址
   - `ANTHROPIC_MODEL`: 默认模型
   - `ANTHROPIC_SMALL_FAST_MODEL`: 快速模型（可选）
+
+#### Claude Skills 配置示例
+
+Claude Skills 允许 Claude 访问本地文件和目录，提升回复质量。例如，让 Claude 读取你的研究报告：
+
+```json
+{
+  "profiles": {
+    "qwen-with-reports": {
+      "name": "Qwen with Research Reports",
+      "cli": "claude",
+      "skills": [
+        "./reporter",
+        "./docs/research"
+      ],
+      "env": {
+        "ANTHROPIC_API_KEY": "your-api-key",
+        "ANTHROPIC_BASE_URL": "https://dashscope.aliyuncs.com/apps/anthropic",
+        "ANTHROPIC_MODEL": "qwen3-max"
+      }
+    }
+  }
+}
+```
+
+**使用 Skills**：
+```bash
+# Claude 会自动读取 ./reporter 目录下的文件作为上下文
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "根据研究报告，总结最新的技术趋势",
+    "profile": "qwen-with-reports"
+  }'
+```
+
+**Skills 说明**：
+- Skills 路径可以是相对路径或绝对路径
+- 支持目录（会递归读取）和单个文件
+- Claude 会将这些文件内容作为上下文，提升回复的准确性
+- 适合场景：研究报告、文档库、代码库等
 
 #### Codex CLI 配置示例
 

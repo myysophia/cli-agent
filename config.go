@@ -9,9 +9,10 @@ import (
 
 // ProfileConfig 表示单个配置 profile
 type ProfileConfig struct {
-	Name string            `json:"name"`
-	CLI  string            `json:"cli,omitempty"` // 可选：指定使用的 CLI 工具（"claude" 或 "codex"）
-	Env  map[string]string `json:"env"`
+	Name   string            `json:"name"`
+	CLI    string            `json:"cli,omitempty"`    // 可选：指定使用的 CLI 工具（"claude" 或 "codex"）
+	Skills []string          `json:"skills,omitempty"` // 可选：Claude Skills 列表（目录或文件路径）
+	Env    map[string]string `json:"env"`
 }
 
 // Config 表示整个配置文件
