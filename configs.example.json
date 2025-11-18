@@ -1,0 +1,37 @@
+{
+  "profiles": {
+    "minimax": {
+      "name": "MiniMax",
+      "env": {
+        "ANTHROPIC_BASE_URL": "https://api.minimaxi.com/anthropic",
+        "ANTHROPIC_AUTH_TOKEN": "your-minimax-token-here",
+        "API_TIMEOUT_MS": "3000000",
+        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+        "ANTHROPIC_MODEL": "MiniMax-M2",
+        "ANTHROPIC_SMALL_FAST_MODEL": "MiniMax-M2",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "MiniMax-M2",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "MiniMax-M2",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "MiniMax-M2"
+      }
+    },
+    "glm": {
+      "name": "智谱 GLM",
+      "env": {
+        "ANTHROPIC_AUTH_TOKEN": "your-glm-token-here",
+        "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+        "API_TIMEOUT_MS": "3000000",
+        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+      }
+    },
+    "kimi": {
+      "name": "Kimi",
+      "env": {
+        "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding/",
+        "ANTHROPIC_AUTH_TOKEN": "your-kimi-token-here",
+        "ANTHROPIC_MODEL": "kimi-for-coding",
+        "ANTHROPIC_SMALL_FAST_MODEL": "kimi-for-coding"
+      }
+    }
+  },
+  "default": "minimax"
+}
