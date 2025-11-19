@@ -159,8 +159,21 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 			log.Printf("🔄 Resuming last session")
 		}
 	} else {
-		// Claude CLI 使用 --print 参数
-		args = []string{"--print", prompt, "--output-format", "json", "--allowedTools", "WebSearch"}
+		// Claude CLI
+		// 如果提供了 sessionID，使用 --resume 继续指定会话
+		if sessionID != "" {
+			args = []string{"-p", prompt, "--output-format", "json", "--allowedTools", "WebSearch", "--resume", sessionID}
+			log.Printf("🔄 Resuming session: %s", sessionID)
+		} else {
+			// Claude CLI 的 -p 模式不支持自动 resume last
+			// 没有 sessionID 时总是创建新会话
+			args = []string{"-p", prompt, "--output-format", "json", "--allowedTools", "WebSearch"}
+			if newSession {
+				log.Printf("🆕 Creating new session")
+			} else {
+				log.Printf("🆕 Creating new session (Claude -p mode requires explicit session ID for resume)")
+			}
+		}
 		
 		// 如果 systemPrompt 非空，追加参数
 		if systemPrompt != "" {
@@ -255,6 +268,19 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	
 	log.Printf("✨ Result preview: %s", truncate(claudeOut.Result, 100))
 	
-	// 返回 Result 字段
-	return claudeOut.Result, nil
+	// 构建统一的 JSON 格式输出（与 Codex 保持一致）
+	claudeOutput := CodexOutput{
+		SessionID: claudeOut.SessionID,
+		User:      prompt,
+		Codex:     claudeOut.Result, // 使用 Codex 字段名保持一致
+	}
+	
+	jsonBytes, err := json.Marshal(claudeOutput)
+	if err != nil {
+		log.Printf("❌ Failed to marshal Claude output to JSON: %v", err)
+		// 如果 JSON 序列化失败，返回原始格式
+		return claudeOut.Result, nil
+	}
+	
+	return string(jsonBytes), nil
 }

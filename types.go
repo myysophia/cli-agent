@@ -34,6 +34,7 @@ type InvokeResponse struct {
 type ClaudeOutput struct {
 	Type         string  `json:"type,omitempty"`
 	Result       string  `json:"result"`
+	SessionID    string  `json:"session_id,omitempty"`
 	TotalCostUSD float64 `json:"total_cost_usd,omitempty"`
 	DurationMS   int     `json:"duration_ms,omitempty"`
 }
