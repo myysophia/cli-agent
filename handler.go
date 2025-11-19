@@ -4,7 +4,14 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sync"
 	"time"
+)
+
+// workflowSessionMap 存储 workflow_run_id 到 session_id 的映射
+var (
+	workflowSessionMap = make(map[string]string)
+	workflowSessionMu  sync.RWMutex
 )
 
 // handleInvoke 处理 /invoke 端点的 HTTP 请求
@@ -47,7 +54,7 @@ func handleInvoke(w http.ResponseWriter, r *http.Request) {
 	// 调用 runCLI 函数执行 CLI
 	log.Println("🚀 Calling CLI...")
 	cliStart := time.Now()
-	result, err := runCLI(req.CLI, prompt, req.System, req.Profile)
+	result, err := runCLI(req.CLI, prompt, req.System, req.Profile, "", false)
 	cliDuration := time.Since(cliStart)
 	
 	if err != nil {
@@ -103,10 +110,34 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	log.Printf("📝 Request parsed - Prompt: %q, System: %q, Profile: %s (took %v)", 
 		req.Prompt, req.System, profileInfo, parseDuration)
 	
-	// 调用 runCLI 函数执行 CLI（传入 cli、prompt、system 和 profile）
+	// 处理 workflow_run_id：自动管理会话
+	sessionID := req.SessionID
+	newSession := req.NewSession
+	
+	if req.WorkflowRunID != "" {
+		log.Printf("🔗 Workflow Run ID: %s", req.WorkflowRunID)
+		
+		// 检查是否已有对应的 session_id
+		workflowSessionMu.RLock()
+		existingSessionID, exists := workflowSessionMap[req.WorkflowRunID]
+		workflowSessionMu.RUnlock()
+		
+		if exists {
+			// 已存在，使用现有的 session_id
+			sessionID = existingSessionID
+			newSession = false
+			log.Printf("♻️  Reusing existing session: %s", sessionID)
+		} else {
+			// 不存在，标记为新会话
+			newSession = true
+			log.Printf("🆕 New workflow run, will create new session")
+		}
+	}
+	
+	// 调用 runCLI 函数执行 CLI（传入 cli、prompt、system、profile、session_id 和 new_session）
 	log.Println("🚀 Calling CLI...")
 	cliStart := time.Now()
-	result, err := runCLI(req.CLI, req.Prompt, req.System, req.Profile)
+	result, err := runCLI(req.CLI, req.Prompt, req.System, req.Profile, sessionID, newSession)
 	cliDuration := time.Since(cliStart)
 	
 	if err != nil {
@@ -118,6 +149,18 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("✅ CLI succeeded, response length: %d chars (took %v)", len(result), cliDuration)
+	
+	// 如果有 workflow_run_id，保存映射关系
+	if req.WorkflowRunID != "" && newSession {
+		// 从返回的 JSON 中提取 session_id
+		var codexOut CodexOutput
+		if err := json.Unmarshal([]byte(result), &codexOut); err == nil && codexOut.SessionID != "" {
+			workflowSessionMu.Lock()
+			workflowSessionMap[req.WorkflowRunID] = codexOut.SessionID
+			workflowSessionMu.Unlock()
+			log.Printf("💾 Saved mapping: workflow_run_id=%s → session_id=%s", req.WorkflowRunID, codexOut.SessionID)
+		}
+	}
 	
 	// 如果成功，构建 InvokeResponse 并返回 200 响应
 	// 设置响应头 Content-Type 为 application/json

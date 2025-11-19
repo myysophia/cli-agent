@@ -38,16 +38,85 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen] + "..."
 }
 
+// parseCodexOutput 解析 Codex CLI 的输出，提取关键信息并返回 JSON 格式
+// 保留：session id、user 问题、codex 回答（过滤掉工具调用和 thinking 部分）
+func parseCodexOutput(output string) string {
+	lines := strings.Split(output, "\n")
+	var sessionID, userPrompt string
+	var lastCodexIndex int = -1
+	
+	// 第一遍：找到所有关键位置
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		
+		// 提取 session id
+		if strings.HasPrefix(trimmed, "session id:") {
+			sessionID = strings.TrimSpace(strings.TrimPrefix(trimmed, "session id:"))
+		}
+		
+		// 检测 user 部分
+		if trimmed == "user" {
+			// 下一行是用户的问题
+			if i+1 < len(lines) {
+				userPrompt = strings.TrimSpace(lines[i+1])
+			}
+		}
+		
+		// 记录最后一个 "codex" 标记的位置
+		if trimmed == "codex" {
+			lastCodexIndex = i
+		}
+	}
+	
+	// 第二遍：从最后一个 "codex" 标记开始收集答案
+	var codexAnswerLines []string
+	if lastCodexIndex != -1 {
+		for j := lastCodexIndex + 1; j < len(lines); j++ {
+			trimmed := strings.TrimSpace(lines[j])
+			
+			// 遇到 "tokens used" 表示结束
+			if strings.HasPrefix(trimmed, "tokens used") {
+				break
+			}
+			
+			// 收集非空行
+			if trimmed != "" {
+				codexAnswerLines = append(codexAnswerLines, trimmed)
+			}
+		}
+	}
+	
+	codexAnswer := strings.Join(codexAnswerLines, "\n")
+	
+	// 构建 JSON 格式的输出
+	codexOut := CodexOutput{
+		SessionID: sessionID,
+		User:      userPrompt,
+		Codex:     codexAnswer,
+	}
+	
+	jsonBytes, err := json.Marshal(codexOut)
+	if err != nil {
+		log.Printf("❌ Failed to marshal Codex output to JSON: %v", err)
+		// 如果 JSON 序列化失败，返回原始格式
+		return fmt.Sprintf("session id: %s\nuser: %s\ncodex: %s", sessionID, userPrompt, codexAnswer)
+	}
+	
+	return string(jsonBytes)
+}
+
 // runCLI 执行指定的 CLI 工具并返回结果
 // 参数：
 //   - cliName: CLI 工具名称（"claude" 或 "codex"，为空则默认 "claude"）
 //   - prompt: 拼接好的对话内容
 //   - systemPrompt: 系统提示词（可为空）
 //   - profileName: 配置 profile 名称（可为空，使用默认）
+//   - sessionID: 会话 ID（可为空，用于继续之前的对话）
+//   - newSession: 是否创建新会话（true=创建新会话，false=resume last）
 // 返回：
 //   - result: CLI 的回答
 //   - error: 执行错误
-func runCLI(cliName string, prompt string, systemPrompt string, profileName string) (string, error) {
+func runCLI(cliName string, prompt string, systemPrompt string, profileName string, sessionID string, newSession bool) (string, error) {
 	var cliSource string
 	
 	// 确定使用的 CLI 工具
@@ -73,22 +142,22 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	
 	// 根据不同的 CLI 工具构建命令参数
 	var args []string
-	var fullPrompt string
 	
 	if cliName == "codex" {
-		// Codex CLI 使用 exec 子命令，添加 sandbox 参数以支持联网
-		args = []string{"exec", "--model", "gpt-5.1", "--sandbox", "danger-full-access"}
-		
-		// Codex 需要将 system prompt 和 prompt 合并
-		if systemPrompt != "" {
-			fullPrompt = fmt.Sprintf("System: %s\n\n%s", systemPrompt, prompt)
-			log.Printf("🎯 Using system prompt: %s", truncate(systemPrompt, 50))
+		// 如果提供了 sessionID，使用 resume 命令继续指定会话
+		if sessionID != "" {
+			args = []string{"exec", "resume", sessionID, prompt}
+			log.Printf("🔄 Resuming session: %s", sessionID)
+		} else if newSession {
+			// 创建新会话
+			args = []string{"exec", "--model", "gpt-5.1", "--sandbox", "danger-full-access", prompt}
+			log.Printf("🆕 Creating new session")
 		} else {
-			fullPrompt = prompt
+			// 没有 sessionID 且不是新会话，使用 --last 继续最近的会话
+			// 注意：--last 不能接受位置参数，prompt 必须通过 stdin 传入
+			args = []string{"exec", "resume", "--last"}
+			log.Printf("🔄 Resuming last session")
 		}
-		
-		// Codex 的 prompt 作为最后一个参数
-		args = append(args, fullPrompt)
 	} else {
 		// Claude CLI 使用 --print 参数
 		args = []string{"--print", prompt, "--output-format", "json", "--allowedTools", "WebSearch"}
@@ -115,6 +184,12 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	
 	// 执行命令
 	cmd := exec.Command(cliName, args...)
+	
+	// 如果是 codex resume --last，通过 stdin 传入 prompt
+	if cliName == "codex" && sessionID == "" && !newSession && len(args) > 2 && args[2] == "--last" {
+		cmd.Stdin = strings.NewReader(prompt)
+		log.Printf("📝 Sending prompt via stdin")
+	}
 	
 	// 如果有配置文件，应用环境变量
 	if globalConfig != nil {
@@ -146,8 +221,10 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	
 	// Codex CLI 直接返回文本，不是 JSON
 	if cliName == "codex" {
-		// log.Printf("✨ Codex result preview: %s", truncate(outputStr, 100))
-		return strings.TrimSpace(outputStr), nil
+		// 解析 Codex 输出，提取关键信息
+		result := parseCodexOutput(outputStr)
+		// log.Printf("✨ Codex result preview: %s", truncate(result, 100))
+		return result, nil
 	}
 	
 	// Claude CLI 返回 JSON 格式
