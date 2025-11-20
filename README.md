@@ -9,10 +9,12 @@
 - 支持系统提示词（system prompt）
 - 支持多种 CLI 工具（Claude CLI 和 Codex CLI）
 - 支持 Claude Skills（访问本地文件和目录）
+- **支持 MCP 工具调用**（WebFetch、Playwright 等）
+- 支持会话管理（session_id 和 resume）
 - 调用 CLI 无头模式获取响应
 - 返回 JSON 格式的结果
-- 默认启用 WebSearch 工具（Claude CLI）
 - 支持多配置 profile 管理
+- 自动日志记录（按日期分文件）
 
 ## 使用场景
 
@@ -82,13 +84,14 @@ curl -X POST http://localhost:8080/invoke \
 
 ### POST /invoke
 
-调用 Claude CLI 获取模型响应。
+调用 Claude CLI 获取模型响应（适用于多轮对话）。
 
 **请求格式**:
 
 ```json
 {
   "profile": "配置名称（可选，默认使用 configs.json 中的 default）",
+  "cli": "CLI 工具名称（可选，'claude' 或 'codex'）",
   "system": "系统提示词（可选）",
   "messages": [
     {"role": "user", "content": "用户消息"},
@@ -100,6 +103,7 @@ curl -X POST http://localhost:8080/invoke \
 
 **字段说明**:
 - `profile` (string, 可选): 指定使用的配置 profile（如 "minimax", "glm", "kimi"）
+- `cli` (string, 可选): CLI 工具名称（"claude" 或 "codex"，覆盖 profile 配置）
 - `system` (string, 可选): 系统提示词，用于设定 AI 的行为和角色
 - `messages` (array, 必需): 对话历史消息列表
   - `role` (string): 消息角色，可选值 `"user"` 或 `"assistant"`
@@ -109,7 +113,44 @@ curl -X POST http://localhost:8080/invoke \
 
 ```json
 {
-  "answer": "Claude 生成的回答内容"
+  "answer": "{\"session_id\":\"xxx\",\"user\":\"问题\",\"codex\":\"回答内容\"}"
+}
+```
+
+### POST /chat
+
+简化的聊天接口（推荐使用）。
+
+**请求格式**:
+
+```json
+{
+  "profile": "配置名称（可选）",
+  "cli": "CLI 工具名称（可选）",
+  "prompt": "你的问题",
+  "system": "系统提示词（可选）",
+  "session_id": "会话ID（可选，用于继续对话）",
+  "new_session": false,
+  "allowed_tools": ["WebFetch", "playwright"],
+  "permission_mode": "bypassPermissions"
+}
+```
+
+**字段说明**:
+- `profile` (string, 可选): 指定使用的配置 profile
+- `cli` (string, 可选): CLI 工具名称（"claude" 或 "codex"）
+- `prompt` (string, 必需): 用户问题或指令
+- `system` (string, 可选): 系统提示词
+- `session_id` (string, 可选): 会话 ID，用于继续之前的对话
+- `new_session` (boolean, 可选): 是否创建新会话（默认 false）
+- `allowed_tools` (array, 可选): 允许使用的 MCP 工具列表
+- `permission_mode` (string, 可选): 权限模式（"bypassPermissions" 自动授权）
+
+**成功响应** (200 OK):
+
+```json
+{
+  "answer": "{\"session_id\":\"xxx\",\"user\":\"问题\",\"codex\":\"回答内容\"}"
 }
 ```
 
@@ -423,6 +464,106 @@ console.log(data.answer);
 - 确认请求的 Content-Type 为 `application/json`
 - 检查 JSON 格式是否正确
 - 确保 messages 数组不为空
+
+## MCP 工具集成
+
+网关支持调用 MCP (Model Context Protocol) 工具，让 AI 能够访问网页、操作浏览器等。
+
+### 配置 MCP 工具
+
+**Claude CLI MCP 配置** (`~/.claude/settings.json`):
+```json
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    }
+  }
+}
+```
+
+**Codex CLI MCP 配置** (`~/.codex/config.toml`):
+```toml
+[mcp]
+enabled = true
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+```
+
+### 使用 MCP 工具
+
+**示例 1：使用 Playwright 抓取网页**
+```bash
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "profile": "codex",
+    "prompt": "访问 https://www.hangjianet.com/news?page=1 获取前3条新闻的标题和日期",
+    "allowed_tools": ["playwright"],
+    "permission_mode": "bypassPermissions"
+  }'
+```
+
+**示例 2：使用 WebFetch 获取网页内容**
+```bash
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "profile": "claude-mirror",
+    "prompt": "获取 https://example.com 的内容并总结",
+    "allowed_tools": ["WebFetch"],
+    "permission_mode": "bypassPermissions"
+  }'
+```
+
+**可用的 MCP 工具**:
+- `WebFetch`: 获取网页内容（Claude CLI 内置）
+- `WebSearch`: 网络搜索（Claude CLI 内置）
+- `playwright`: 浏览器自动化（需要配置 Playwright MCP）
+- `fetch`: 网页抓取（需要配置 fetch MCP）
+
+**注意事项**:
+- 使用 `allowed_tools` 指定允许的工具列表
+- 使用 `permission_mode: "bypassPermissions"` 自动授权工具使用
+- Codex CLI 的 Playwright 工具功能更强大，推荐用于网页抓取
+- Claude CLI 的 WebFetch 可能有网络限制
+
+## 会话管理
+
+网关支持会话管理，可以继续之前的对话。
+
+**创建新会话**:
+```bash
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "你好，我是张三",
+    "new_session": true
+  }'
+```
+
+**继续会话**（使用返回的 session_id）:
+```bash
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "我叫什么名字？",
+    "session_id": "xxx-xxx-xxx"
+  }'
+```
+
+**Dify 工作流集成**（自动管理会话）:
+```bash
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "你好",
+    "workflow_run_id": "dify-workflow-123"
+  }'
+```
 
 ## 相关文档
 
