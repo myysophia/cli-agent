@@ -1,5 +1,14 @@
 {
   "profiles": {
+    "kimi": {
+      "name": "Kimi",
+      "env": {
+        "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding/",
+        "ANTHROPIC_AUTH_TOKEN": "your-kimi-token-here",
+        "ANTHROPIC_MODEL": "kimi-for-coding",
+        "ANTHROPIC_SMALL_FAST_MODEL": "kimi-for-coding"
+      }
+    },
     "minimax": {
       "name": "MiniMax",
       "env": {
@@ -23,13 +32,16 @@
         "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
       }
     },
-    "kimi": {
-      "name": "Kimi",
+    "kimi-k2": {
+      "name": "Kimi K2 Thinking",
       "env": {
         "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding/",
         "ANTHROPIC_AUTH_TOKEN": "your-kimi-token-here",
-        "ANTHROPIC_MODEL": "kimi-for-coding",
-        "ANTHROPIC_SMALL_FAST_MODEL": "kimi-for-coding"
+        "ANTHROPIC_MODEL": "kimi-k2-thinking",
+        "ANTHROPIC_SMALL_FAST_MODEL": "kimi-k2-thinking",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "kimi-k2-thinking",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "kimi-k2-thinking",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "kimi-k2-thinking"
       }
     },
     "qwen": {
@@ -39,17 +51,34 @@
         "ANTHROPIC_API_KEY": "your-bailian-api-key-here",
         "ANTHROPIC_BASE_URL": "https://dashscope.aliyuncs.com/apps/anthropic",
         "ANTHROPIC_MODEL": "qwen3-max",
-        "ANTHROPIC_SMALL_FAST_MODEL": "qwen-flash"
+        "ANTHROPIC_SMALL_FAST_MODEL": "qwen3-max"
       }
     },
-    "codex-example": {
-      "name": "Codex Example",
+    "codex": {
+      "name": "OpenAI Codex (GPT-5.1)",
       "cli": "codex",
+      "env": {}
+    },
+    "qwen-with-reports": {
+      "name": "Qwen with Research Reports",
+      "cli": "claude",
+      "skills": ["./reporter"],
       "env": {
-        "ANTHROPIC_BASE_URL": "https://api.example.com/anthropic",
-        "ANTHROPIC_AUTH_TOKEN": "your-codex-token-here"
+        "ANTHROPIC_API_KEY": "your-bailian-api-key-here",
+        "ANTHROPIC_BASE_URL": "https://dashscope.aliyuncs.com/apps/anthropic",
+        "ANTHROPIC_MODEL": "qwen3-max",
+        "ANTHROPIC_SMALL_FAST_MODEL": "qwen3-max"
+      }
+    },
+    "claude-mirror": {
+      "name": "Claude Mirror",
+      "cli": "claude",
+      "env": {
+        "ANTHROPIC_BASE_URL": "https://api.codemirror.codes/",
+        "ANTHROPIC_API_KEY": "your-claude-mirror-api-key-here",
+        "ANTHROPIC_AUTH_TOKEN": ""
       }
     }
   },
-  "default": "minimax"
+  "default": "codex"
 }
