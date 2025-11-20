@@ -113,10 +113,12 @@ func parseCodexOutput(output string) string {
 //   - profileName: 配置 profile 名称（可为空，使用默认）
 //   - sessionID: 会话 ID（可为空，用于继续之前的对话）
 //   - newSession: 是否创建新会话（true=创建新会话，false=resume last）
+//   - allowedTools: 允许使用的工具列表（可为空，仅 Claude CLI 支持）
+//   - permissionMode: 权限模式（可为空，仅 Claude CLI 支持）
 // 返回：
 //   - result: CLI 的回答
 //   - error: 执行错误
-func runCLI(cliName string, prompt string, systemPrompt string, profileName string, sessionID string, newSession bool) (string, error) {
+func runCLI(cliName string, prompt string, systemPrompt string, profileName string, sessionID string, newSession bool, allowedTools []string, permissionMode string) (string, error) {
 	var cliSource string
 	
 	// 确定使用的 CLI 工具
@@ -144,6 +146,15 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	var args []string
 	
 	if cliName == "codex" {
+		// Codex CLI 不支持 --allowedTools 和 --permission-mode 参数
+		// 它会自动使用 ~/.codex/config.toml 中配置的 MCP 工具
+		if len(allowedTools) > 0 {
+			log.Printf("⚠️  Codex CLI does not support --allowedTools parameter, using MCP config from ~/.codex/config.toml")
+		}
+		if permissionMode != "" {
+			log.Printf("⚠️  Codex CLI does not support --permission-mode parameter")
+		}
+		
 		// 如果提供了 sessionID，使用 resume 命令继续指定会话
 		if sessionID != "" {
 			args = []string{"exec", "resume", sessionID, prompt}
@@ -162,17 +173,30 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 		// Claude CLI
 		// 如果提供了 sessionID，使用 --resume 继续指定会话
 		if sessionID != "" {
-			args = []string{"-p", prompt, "--output-format", "json", "--allowedTools", "WebSearch", "--resume", sessionID}
+			args = []string{"-p", prompt, "--output-format", "json", "--resume", sessionID}
 			log.Printf("🔄 Resuming session: %s", sessionID)
 		} else {
 			// Claude CLI 的 -p 模式不支持自动 resume last
 			// 没有 sessionID 时总是创建新会话
-			args = []string{"-p", prompt, "--output-format", "json", "--allowedTools", "WebSearch"}
+			args = []string{"-p", prompt, "--output-format", "json"}
 			if newSession {
 				log.Printf("🆕 Creating new session")
 			} else {
 				log.Printf("🆕 Creating new session (Claude -p mode requires explicit session ID for resume)")
 			}
+		}
+		
+		// 添加 allowedTools 参数（仅 Claude CLI 支持）
+		if len(allowedTools) > 0 {
+			toolsStr := strings.Join(allowedTools, ",")
+			args = append(args, "--allowedTools", toolsStr)
+			log.Printf("🔧 Allowed tools: %s", toolsStr)
+		}
+		
+		// 添加 permission-mode 参数（仅 Claude CLI 支持）
+		if permissionMode != "" {
+			args = append(args, "--permission-mode", permissionMode)
+			log.Printf("🔐 Permission mode: %s", permissionMode)
 		}
 		
 		// 如果 systemPrompt 非空，追加参数

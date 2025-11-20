@@ -54,7 +54,7 @@ func handleInvoke(w http.ResponseWriter, r *http.Request) {
 	// 调用 runCLI 函数执行 CLI
 	log.Println("🚀 Calling CLI...")
 	cliStart := time.Now()
-	result, err := runCLI(req.CLI, prompt, req.System, req.Profile, "", false)
+	result, err := runCLI(req.CLI, prompt, req.System, req.Profile, "", false, nil, "")
 	cliDuration := time.Since(cliStart)
 	
 	if err != nil {
@@ -134,10 +134,10 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	
-	// 调用 runCLI 函数执行 CLI（传入 cli、prompt、system、profile、session_id 和 new_session）
+	// 调用 runCLI 函数执行 CLI（传入 cli、prompt、system、profile、session_id、new_session、allowed_tools 和 permission_mode）
 	log.Println("🚀 Calling CLI...")
 	cliStart := time.Now()
-	result, err := runCLI(req.CLI, req.Prompt, req.System, req.Profile, sessionID, newSession)
+	result, err := runCLI(req.CLI, req.Prompt, req.System, req.Profile, sessionID, newSession, req.AllowedTools, req.PermissionMode)
 	cliDuration := time.Since(cliStart)
 	
 	if err != nil {
