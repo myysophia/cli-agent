@@ -32,18 +32,10 @@ type InvokeResponse struct {
 	Answer string `json:"answer"`
 }
 
-// ClaudeOutput 表示 Claude CLI 的 JSON 输出格式
-type ClaudeOutput struct {
-	Type         string  `json:"type,omitempty"`
-	Result       string  `json:"result"`
-	SessionID    string  `json:"session_id,omitempty"`
-	TotalCostUSD float64 `json:"total_cost_usd,omitempty"`
-	DurationMS   int     `json:"duration_ms,omitempty"`
-}
-
-// CodexOutput 表示 Codex CLI 的结构化输出格式
-type CodexOutput struct {
+// CLIOutput 表示统一的 CLI 输出格式（兼容旧格式）
+type CLIOutput struct {
 	SessionID string `json:"session_id"`
 	User      string `json:"user"`
-	Codex     string `json:"codex"`
+	Codex     string `json:"codex"`    // 保持兼容性
+	Response  string `json:"response"` // 新字段
 }

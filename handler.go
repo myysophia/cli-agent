@@ -153,12 +153,12 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	// 如果有 workflow_run_id，保存映射关系
 	if req.WorkflowRunID != "" && newSession {
 		// 从返回的 JSON 中提取 session_id
-		var codexOut CodexOutput
-		if err := json.Unmarshal([]byte(result), &codexOut); err == nil && codexOut.SessionID != "" {
+		var cliOut CLIOutput
+		if err := json.Unmarshal([]byte(result), &cliOut); err == nil && cliOut.SessionID != "" {
 			workflowSessionMu.Lock()
-			workflowSessionMap[req.WorkflowRunID] = codexOut.SessionID
+			workflowSessionMap[req.WorkflowRunID] = cliOut.SessionID
 			workflowSessionMu.Unlock()
-			log.Printf("💾 Saved mapping: workflow_run_id=%s → session_id=%s", req.WorkflowRunID, codexOut.SessionID)
+			log.Printf("💾 Saved mapping: workflow_run_id=%s → session_id=%s", req.WorkflowRunID, cliOut.SessionID)
 		}
 	}
 	
