@@ -1,13 +1,23 @@
-# Claude CLI Gateway
+# CLI Gateway
 
-一个极简的 Go HTTP 网关服务，将 HTTP 请求桥接到 Claude CLI。通过 HTTP 接口调用 Claude CLI 的无头模式，让任何支持 HTTP 的应用都能使用 Claude CLI 的能力。
+一个极简的 Go HTTP 网关服务，将 HTTP 请求桥接到多种 AI CLI 工具。通过统一的 HTTP 接口调用各种 CLI 的无头模式，让任何支持 HTTP 的应用都能使用这些 CLI 的能力。
+
+## 支持的 CLI 工具
+
+| CLI | 说明 | 模型示例 |
+|-----|------|----------|
+| `claude` | Anthropic Claude Code CLI | claude-sonnet-4, 支持第三方 API |
+| `codex` | OpenAI Codex CLI | gpt-5.1 |
+| `cursor` | Cursor Agent CLI | auto, gpt-5, sonnet-4 |
+| `gemini` | Google Gemini CLI | gemini-2.5-pro, gemini-2.5-flash |
+| `qwen` | 阿里 Qwen Code CLI | qwen3-max |
 
 ## 功能特性
 
 - 提供 HTTP POST 接口 `/invoke` 和 `/chat` 接收对话请求
 - 自动将对话历史转换为 CLI 的 prompt 格式
 - 支持系统提示词（system prompt）
-- 支持多种 CLI 工具（Claude CLI 和 Codex CLI）
+- **支持 5 种 CLI 工具**（Claude、Codex、Cursor、Gemini、Qwen）
 - 支持 Claude Skills（访问本地文件和目录）
 - **支持 MCP 工具调用**（WebFetch、Playwright 等）
 - 支持会话管理（session_id 和 resume）
@@ -26,9 +36,12 @@
 ## 前置要求
 
 1. **Go 环境**: Go 1.16 或更高版本
-2. **Claude CLI**: 已安装并配置好 Anthropic Claude CLI
-   - 确保 `claude` 命令在 PATH 中可用
-   - 已完成 Claude CLI 的认证配置
+2. **CLI 工具**: 至少安装并配置好以下一种 CLI：
+   - `claude` - Anthropic Claude Code CLI
+   - `codex` - OpenAI Codex CLI
+   - `cursor-agent` - Cursor Agent CLI
+   - `gemini` - Google Gemini CLI
+   - `qwen` - 阿里 Qwen Code CLI
 
 ## 快速开始
 
@@ -102,8 +115,8 @@ curl -X POST http://localhost:8080/invoke \
 ```
 
 **字段说明**:
-- `profile` (string, 可选): 指定使用的配置 profile（如 "minimax", "glm", "kimi"）
-- `cli` (string, 可选): CLI 工具名称（"claude" 或 "codex"，覆盖 profile 配置）
+- `profile` (string, 可选): 指定使用的配置 profile（如 "cursor", "gemini", "codex"）
+- `cli` (string, 可选): CLI 工具名称（"claude", "codex", "cursor", "gemini", "qwen"）
 - `system` (string, 可选): 系统提示词，用于设定 AI 的行为和角色
 - `messages` (array, 必需): 对话历史消息列表
   - `role` (string): 消息角色，可选值 `"user"` 或 `"assistant"`
@@ -138,7 +151,7 @@ curl -X POST http://localhost:8080/invoke \
 
 **字段说明**:
 - `profile` (string, 可选): 指定使用的配置 profile
-- `cli` (string, 可选): CLI 工具名称（"claude" 或 "codex"）
+- `cli` (string, 可选): CLI 工具名称（"claude", "codex", "cursor", "gemini", "qwen"）
 - `prompt` (string, 必需): 用户问题或指令
 - `system` (string, 可选): 系统提示词
 - `session_id` (string, 可选): 会话 ID，用于继续之前的对话
@@ -174,11 +187,22 @@ curl -X POST http://localhost:8080/invoke \
 ## 项目结构
 
 ```
-claude-cli-gateway/
+cli-gateway/
 ├── main.go          # 程序入口，启动 HTTP 服务器
 ├── handler.go       # HTTP handler 实现
-├── claude.go        # Claude CLI 调用逻辑
+├── claude.go        # CLI 调用入口
 ├── types.go         # 数据结构定义
+├── config.go        # 配置管理
+├── cli/             # CLI 实现包
+│   ├── interface.go # CLI 接口定义
+│   ├── factory.go   # CLI 工厂函数
+│   ├── claude.go    # Claude CLI 实现
+│   ├── codex.go     # Codex CLI 实现
+│   ├── cursor.go    # Cursor Agent CLI 实现
+│   ├── gemini.go    # Gemini CLI 实现
+│   ├── qwen.go      # Qwen CLI 实现
+│   └── utils.go     # 工具函数
+├── configs.json     # 配置文件
 ├── go.mod           # Go module 定义
 ├── README.md        # 项目文档
 └── start.sh         # 启动脚本
@@ -236,7 +260,8 @@ claude-cli-gateway/
 
 **配置字段说明**：
 - `name`: Profile 的显示名称
-- `cli`: 使用的 CLI 工具（可选，"claude" 或 "codex"，默认 "claude"）
+- `cli`: 使用的 CLI 工具（"claude", "codex", "cursor", "gemini", "qwen"）
+- `model`: 模型名称（可选，如 "gpt-5.1", "sonnet-4", "gemini-2.5-pro"）
 - `skills`: Claude Skills 列表（可选，仅 Claude CLI 支持）
   - 可以是目录路径或文件路径
   - Claude 会读取这些路径下的内容作为上下文
@@ -288,50 +313,80 @@ curl -X POST http://localhost:8080/chat \
 - Claude 会将这些文件内容作为上下文，提升回复的准确性
 - 适合场景：研究报告、文档库、代码库等
 
-#### Codex CLI 配置示例
+#### 原生 CLI 配置示例
 
-如果你想使用原生的 OpenAI Codex CLI（GPT-4.1），只需在 profile 中添加 `"cli": "codex"` 字段。由于 Codex CLI 已在本地配置好，不需要设置额外的环境变量：
+以下是各种原生 CLI 工具的配置示例：
 
 ```json
 {
   "profiles": {
     "codex": {
-      "name": "OpenAI Codex (GPT-4.1)",
+      "name": "OpenAI Codex (GPT-5.1)",
       "cli": "codex",
+      "env": {}
+    },
+    "cursor": {
+      "name": "Cursor Agent",
+      "cli": "cursor",
+      "model": "auto",
+      "env": {}
+    },
+    "cursor-gpt5": {
+      "name": "Cursor Agent (GPT-5)",
+      "cli": "cursor",
+      "model": "gpt-5",
+      "env": {}
+    },
+    "gemini": {
+      "name": "Google Gemini",
+      "cli": "gemini",
+      "env": {}
+    },
+    "gemini-pro": {
+      "name": "Gemini 2.5 Pro",
+      "cli": "gemini",
+      "model": "gemini-2.5-pro",
+      "env": {}
+    },
+    "qwen-cli": {
+      "name": "Qwen Code CLI",
+      "cli": "qwen",
       "env": {}
     }
   },
-  "default": "codex"
+  "default": "cursor"
 }
 ```
 
-**使用 Codex CLI**：
+**使用示例**：
 ```bash
-# 使用 Codex profile
+# 使用 Cursor Agent
 curl -X POST http://localhost:8080/chat \
   -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "写一个 Python 快速排序",
-    "profile": "codex"
-  }'
+  -d '{"prompt": "写一个 Python 快速排序", "profile": "cursor"}'
 
-# 或者在请求中临时指定使用 codex（覆盖 profile 配置）
+# 使用 Gemini
 curl -X POST http://localhost:8080/chat \
   -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "写一个 Python 快速排序",
-    "profile": "qwen",
-    "cli": "codex"
-  }'
+  -d '{"prompt": "解释量子计算", "profile": "gemini-pro"}'
+
+# 使用 Codex
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "分析这段代码", "profile": "codex"}'
+
+# 使用 Qwen CLI
+curl -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "你好", "profile": "qwen-cli"}'
 ```
 
 **注意**：
-- Codex CLI 需要预先在本地配置好（通过 `codex login` 等命令）
-- 网关会调用 `codex exec --model gpt-5.1 --sandbox danger-full-access` 命令
-- `--sandbox danger-full-access` 参数允许 Codex 联网访问
-- 使用你本地配置的 Codex 认证信息
-- 不需要在 `env` 中配置任何 API 密钥或端点
-- Codex 返回纯文本格式（不是 JSON）
+- 各 CLI 需要预先在本地配置好认证
+- Codex: `codex login`
+- Cursor: `cursor-agent login`
+- Gemini: 使用 Google 账号认证
+- Qwen: 使用阿里云账号认证
 
 #### 使用不同配置
 
@@ -434,17 +489,23 @@ console.log(data.answer);
 ### 核心组件
 
 1. **HTTP Handler** (`handler.go`): 处理 HTTP 请求，解析 JSON，返回响应
-2. **Prompt Builder** (`claude.go`): 将消息数组拼接成 Claude CLI 可用的 prompt
-3. **CLI Executor** (`claude.go`): 执行 claude 命令，解析 JSON 输出
+2. **CLI 接口** (`cli/interface.go`): 定义统一的 CLI 运行接口
+3. **CLI 工厂** (`cli/factory.go`): 根据类型创建对应的 CLI 实例
+4. **CLI 实现** (`cli/*.go`): 各 CLI 工具的具体实现
 
-### 添加新功能
+### 添加新 CLI 支持
 
-项目采用模块化设计，便于扩展：
+项目采用接口模式，添加新 CLI 只需：
 
-- 添加鉴权：在 `handler.go` 中添加 token 验证逻辑
-- 添加日志：引入日志库记录请求详情
-- 配置化：使用环境变量或配置文件替代硬编码
-- 支持其他 CLI：在 `claude.go` 中抽象 CLI 接口
+1. 在 `cli/` 目录创建新文件（如 `newcli.go`）
+2. 实现 `CLIRunner` 接口：
+   ```go
+   type CLIRunner interface {
+       Name() string
+       Run(opts *RunOptions) (string, error)
+   }
+   ```
+3. 在 `cli/factory.go` 中注册新 CLI
 
 ## 故障排查
 
