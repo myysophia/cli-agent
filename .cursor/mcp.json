@@ -1,0 +1,35 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx @playwright/mcp@latest",
+      "env": {}
+    },
+    "shrimp-task-manager": {
+      "command": "node",
+      "args": [
+        "/Users/ninesun/projects/mcp/mcp-shrimp-task-manager/dist/index.js"
+      ],
+      "env": {
+        "DATA_DIR": "/Users/ninesun/projects/zsh-auto",
+        "TEMPLATES_USE": "zh",
+        "ENABLE_GUI": "false"
+      }
+    },
+    "aktools": {
+      "command": "uvx",
+      "args": [
+        "mcp-aktools"
+      ],
+      "env": {}
+    },
+    "notify": {
+      "command": "uvx",
+      "args": [
+        "mcp-notify"
+      ],
+      "env": {
+        "WEWORK_BOT_KEY": "d8a5ed6e-a42c-4625-9cae-2519ed87eaf2"
+      }
+    }
+  }
+}
