@@ -50,7 +50,7 @@ Release Notes 页面已自动部署到 GitHub Pages，每小时自动更新：
 ## 项目结构
 
 ```
-dify-cli-gateway/
+cli-agent/
 ├── cmd/
 │   └── server/
 │       └── main.go               # 主入口
