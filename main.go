@@ -1,13 +1,20 @@
 package main
 
 import (
+	"context"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
+
+	"dify-cli-gateway/release_notes"
 )
+
+var releaseNotesService *release_notes.ReleaseNotesService
 
 func setupLogging() (*os.File, error) {
 	// 创建 logs 目录
@@ -53,6 +60,66 @@ func main() {
 	// 使用 http.HandleFunc 注册 "/invoke" 路由到 handleInvoke
 	http.HandleFunc("/invoke", handleInvoke)
 	http.HandleFunc("/chat", handleChat)
+	
+	// Initialize Release Notes Service with config
+	rnConfig := GetReleaseNotesConfig()
+	serviceConfig := release_notes.ServiceConfig{
+		CacheTTL:        time.Duration(rnConfig.CacheTTLMinutes) * time.Minute,
+		RefreshInterval: time.Duration(rnConfig.RefreshIntervalMinutes) * time.Minute,
+		StoragePath:     rnConfig.StoragePath,
+	}
+	releaseNotesService = release_notes.NewReleaseNotesService(serviceConfig)
+	releaseNotesHandler := NewReleaseNotesHandler(releaseNotesService)
+	
+	// Register release notes routes
+	http.HandleFunc("/release-notes", func(w http.ResponseWriter, r *http.Request) {
+		// Exact match for /release-notes (no trailing slash)
+		if r.URL.Path == "/release-notes" {
+			releaseNotesHandler.HandleGetAllReleaseNotes(w, r)
+			return
+		}
+		// This shouldn't happen but handle it anyway
+		http.NotFound(w, r)
+	})
+	http.HandleFunc("/release-notes/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if path == "/release-notes/" {
+			// Redirect /release-notes/ to /release-notes
+			http.Redirect(w, r, "/release-notes", http.StatusMovedPermanently)
+			return
+		}
+		if path == "/release-notes/view" {
+			releaseNotesHandler.HandleReleaseNotesView(w, r)
+		} else {
+			releaseNotesHandler.HandleGetCLIReleaseNotes(w, r)
+		}
+	})
+	
+	// Start release notes service
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	
+	go func() {
+		if err := releaseNotesService.Start(ctx); err != nil {
+			log.Printf("⚠️ Failed to start release notes service: %v", err)
+		}
+	}()
+	log.Println("📋 Release notes service initialized")
+	
+	// Setup graceful shutdown
+	go func() {
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		<-sigChan
+		log.Println("🛑 Shutting down...")
+		cancel()
+		if releaseNotesService != nil {
+			if err := releaseNotesService.Stop(); err != nil {
+				log.Printf("⚠️ Error stopping release notes service: %v", err)
+			}
+		}
+		os.Exit(0)
+	}()
 	
 	// 打印启动日志
 	log.Println("🌐 Gateway service starting on :8080")

@@ -39,4 +39,5 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
-dify-cli-gateway-new
+dify-cli-gateway-newdata/
+*.log

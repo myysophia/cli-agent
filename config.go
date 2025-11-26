@@ -16,10 +16,18 @@ type ProfileConfig struct {
 	Env    map[string]string `json:"env"`
 }
 
+// ReleaseNotesConfig 表示 release notes 服务配置
+type ReleaseNotesConfig struct {
+	RefreshIntervalMinutes int    `json:"refresh_interval_minutes"` // 刷新间隔（分钟），默认 60
+	CacheTTLMinutes        int    `json:"cache_ttl_minutes"`        // 缓存 TTL（分钟），默认 60
+	StoragePath            string `json:"storage_path"`             // 存储路径，默认 "data/release_notes.json"
+}
+
 // Config 表示整个配置文件
 type Config struct {
-	Profiles map[string]ProfileConfig `json:"profiles"`
-	Default  string                   `json:"default"`
+	Profiles     map[string]ProfileConfig `json:"profiles"`
+	Default      string                   `json:"default"`
+	ReleaseNotes *ReleaseNotesConfig      `json:"release_notes,omitempty"`
 }
 
 var globalConfig *Config
@@ -75,6 +83,38 @@ func initConfig() error {
 	for name, profile := range config.Profiles {
 		log.Printf("   - %s: %s", name, profile.Name)
 	}
+	
+	// 打印 release notes 配置
+	if config.ReleaseNotes != nil {
+		log.Printf("📋 Release notes config: refresh=%dm, cache_ttl=%dm, storage=%s",
+			config.ReleaseNotes.RefreshIntervalMinutes,
+			config.ReleaseNotes.CacheTTLMinutes,
+			config.ReleaseNotes.StoragePath)
+	}
 
 	return nil
+}
+
+// GetReleaseNotesConfig 返回 release notes 配置，如果未配置则返回默认值
+func GetReleaseNotesConfig() ReleaseNotesConfig {
+	if globalConfig != nil && globalConfig.ReleaseNotes != nil {
+		cfg := *globalConfig.ReleaseNotes
+		// 设置默认值
+		if cfg.RefreshIntervalMinutes <= 0 {
+			cfg.RefreshIntervalMinutes = 60
+		}
+		if cfg.CacheTTLMinutes <= 0 {
+			cfg.CacheTTLMinutes = 60
+		}
+		if cfg.StoragePath == "" {
+			cfg.StoragePath = "data/release_notes.json"
+		}
+		return cfg
+	}
+	// 返回默认配置
+	return ReleaseNotesConfig{
+		RefreshIntervalMinutes: 60,
+		CacheTTLMinutes:        60,
+		StoragePath:            "data/release_notes.json",
+	}
 }
