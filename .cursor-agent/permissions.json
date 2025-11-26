@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**/*)",
+      "Shell(go)",
+      "Shell(grep)",
+      "Shell(find)",
+      "Shell(ls)",
+      "Shell(cat)",
+      "Shell(head)",
+      "Shell(tail)",
+      "Shell(wc)"
+    ],
+    "deny": [
+      "Write(**/*)",
+      "Shell(git)",
+      "Shell(gh)",
+      "Shell(rm)",
+      "Shell(mv)",
+      "Shell(cp)",
+      "Write(.env*)",
+      "Write(configs.json)"
+    ]
+  }
+}

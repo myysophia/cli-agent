@@ -40,6 +40,14 @@
 - 💾 **缓存机制**：内存缓存 + 文件持久化
 - ✅ **只显示正式版本**：自动过滤 alpha、beta、nightly、preview 等版本
 
+### Cursor Agent CI 集成
+- 🤖 **自动化测试**：使用 Cursor Agent CLI 进行 AI 驱动的代码分析
+- 📊 **定时运行**：每天自动运行测试任务
+- 🔧 **MCP 工具支持**：集成 filesystem、fetch 等 MCP 服务器
+- 📝 **测试报告**：自动生成并上传测试报告
+
+详细配置请查看：[Cursor Agent CI 指南](docs/CURSOR_AGENT_CI.md)
+
 ## 项目结构
 
 ```
