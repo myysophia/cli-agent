@@ -1,6 +1,13 @@
 # CLI Gateway
 
-一个极简的 Go HTTP 网关服务，将 HTTP 请求桥接到多种 AI CLI 工具。通过统一的 HTTP 接口调用各种 CLI 的无头模式，让任何支持 HTTP 的应用都能使用这些 CLI 的能力。
+一个极简的 Go HTTP 网关服务，将 HTTP 请求桥接到多种 AI CLI 工具。通过统一的 HTTP 接口调用各种 CLI 的无头模式，让任何支持 HTTP 的应用（Web 应用、移动端、IoT 设备等）都能使用这些 CLI 的强大能力。
+
+**核心特性**：
+- 🌐 **通用 HTTP 接口**：任何能发起 HTTP 请求的客户端都可以使用
+- 🚀 **流式输出支持**：支持 SSE (Server-Sent Events) 实时流式响应
+- 🔌 **多 CLI 集成**：统一接口调用 Claude、Codex、Cursor、Gemini、Qwen 等
+- 🛠️ **MCP 工具链**：支持 WebFetch、Playwright 等扩展工具
+- 📦 **开箱即用**：无需复杂配置，快速部署到任何环境
 
 ## 支持的 CLI 工具
 
@@ -93,10 +100,13 @@ dify-cli-gateway/
 
 ## 使用场景
 
-- **Dify 集成**: 作为自定义模型提供商接入 Dify
-- **API 服务**: 为不支持 CLI 的应用提供 Claude 访问能力
-- **自动化工具**: 在 CI/CD 或自动化脚本中通过 HTTP 调用 Claude
-- **本地开发**: 快速搭建本地 Claude API 服务进行测试
+- 🌐 **Web 应用集成**：为前端应用提供 AI 能力，支持实时流式响应
+- 📱 **移动端接入**：iOS/Android 应用通过 HTTP 调用 AI 服务
+- 🤖 **工作流平台**：Dify、n8n、Zapier 等低代码平台的自定义节点
+- 🔧 **自动化脚本**：CI/CD、定时任务、批处理中调用 AI
+- 🏠 **IoT 设备**：智能家居、边缘计算设备的 AI 接口
+- 🧪 **本地开发测试**：快速搭建本地 AI API 服务进行原型验证
+- 📊 **数据处理管道**：ETL 流程中的智能数据分析和转换
 
 ## 前置要求
 
@@ -197,7 +207,7 @@ curl -X POST http://localhost:8080/invoke \
 
 ### POST /chat
 
-简化的聊天接口（推荐使用）。
+简化的聊天接口（推荐使用），支持流式和非流式输出。
 
 **请求格式**:
 
@@ -210,7 +220,8 @@ curl -X POST http://localhost:8080/invoke \
   "session_id": "会话ID（可选，用于继续对话）",
   "new_session": false,
   "allowed_tools": ["WebFetch", "playwright"],
-  "permission_mode": "bypassPermissions"
+  "permission_mode": "bypassPermissions",
+  "stream": false
 }
 ```
 
@@ -223,13 +234,43 @@ curl -X POST http://localhost:8080/invoke \
 - `new_session` (boolean, 可选): 是否创建新会话（默认 false）
 - `allowed_tools` (array, 可选): 允许使用的 MCP 工具列表
 - `permission_mode` (string, 可选): 权限模式（"bypassPermissions" 自动授权）
+- `stream` (boolean, 可选): 是否启用流式输出（默认 false）
 
-**成功响应** (200 OK):
+**非流式响应** (200 OK):
 
 ```json
 {
   "answer": "{\"session_id\":\"xxx\",\"user\":\"问题\",\"codex\":\"回答内容\"}"
 }
+```
+
+**流式响应** (SSE 格式):
+
+当 `stream: true` 时，响应为 Server-Sent Events (SSE) 流：
+
+```
+Content-Type: text/event-stream
+
+data: {"type":"start","session_id":"xxx"}
+
+data: {"type":"content","text":"这是"}
+
+data: {"type":"content","text":"流式"}
+
+data: {"type":"content","text":"输出"}
+
+data: {"type":"done"}
+```
+
+**流式输出示例**:
+```bash
+# 使用 curl 接收流式输出
+curl -N -X POST http://localhost:8080/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "写一首诗",
+    "stream": true
+  }'
 ```
 
 **错误响应**:
@@ -507,46 +548,168 @@ ls -lh logs/
 
 ## 集成示例
 
-### 在 Dify 中使用
+### Web 前端集成
 
-1. 在 Dify 中添加自定义模型提供商
-2. 配置 API 端点为: `http://localhost:8080/invoke`
-3. 设置请求方法为 POST
-4. 配置请求格式为上述 JSON 格式
+**使用 Fetch API（流式输出）**:
+```javascript
+const response = await fetch('http://localhost:8080/chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        prompt: "写一首关于代码的诗",
+        stream: true
+    })
+});
 
-### 在其他应用中使用
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
 
-任何支持 HTTP 的应用都可以调用此网关：
+while (true) {
+    const {done, value} = await reader.read();
+    if (done) break;
+    
+    const chunk = decoder.decode(value);
+    const lines = chunk.split('\n');
+    
+    for (const line of lines) {
+        if (line.startsWith('data: ')) {
+            const data = JSON.parse(line.slice(6));
+            if (data.type === 'content') {
+                console.log(data.text); // 实时显示输出
+            }
+        }
+    }
+}
+```
 
-**Python 示例**:
+**使用 EventSource（SSE）**:
+```javascript
+// 注意：EventSource 不支持 POST，需要后端支持 GET 或使用 fetch
+const eventSource = new EventSource('http://localhost:8080/chat?prompt=你好&stream=true');
+
+eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'content') {
+        document.getElementById('output').innerText += data.text;
+    }
+};
+```
+
+### 移动端集成
+
+**iOS (Swift)**:
+```swift
+let url = URL(string: "http://localhost:8080/chat")!
+var request = URLRequest(url: url)
+request.httpMethod = "POST"
+request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+let body: [String: Any] = [
+    "prompt": "你好",
+    "stream": false
+]
+request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+URLSession.shared.dataTask(with: request) { data, response, error in
+    if let data = data {
+        let result = try? JSONDecoder().decode(ChatResponse.self, from: data)
+        print(result?.answer ?? "")
+    }
+}.resume()
+```
+
+**Android (Kotlin)**:
+```kotlin
+val client = OkHttpClient()
+val json = JSONObject()
+    .put("prompt", "你好")
+    .put("stream", false)
+
+val request = Request.Builder()
+    .url("http://localhost:8080/chat")
+    .post(json.toString().toRequestBody("application/json".toMediaType()))
+    .build()
+
+client.newCall(request).execute().use { response ->
+    val result = JSONObject(response.body?.string() ?: "")
+    println(result.getString("answer"))
+}
+```
+
+### 工作流平台集成
+
+**Dify 自定义节点**:
+1. 在 Dify 中添加 HTTP 请求节点
+2. 配置 URL: `http://localhost:8080/chat`
+3. 方法: POST
+4. 请求体: `{"prompt": "{{input}}", "profile": "cursor"}`
+
+**n8n 集成**:
+1. 添加 HTTP Request 节点
+2. Method: POST
+3. URL: `http://localhost:8080/chat`
+4. Body: JSON
+5. 启用 `stream: true` 可获得实时响应
+
+### Python 脚本集成
+
+**非流式请求**:
+
 ```python
 import requests
 
-response = requests.post('http://localhost:8080/invoke', json={
-    "system": "你是一个编程助手",
-    "messages": [
-        {"role": "user", "content": "如何用 Python 读取文件？"}
-    ]
+response = requests.post('http://localhost:8080/chat', json={
+    "prompt": "如何用 Python 读取文件？",
+    "system": "你是一个编程助手"
 })
 
 print(response.json()['answer'])
 ```
 
-**JavaScript 示例**:
-```javascript
-const response = await fetch('http://localhost:8080/invoke', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-        system: "你是一个编程助手",
-        messages: [
-            {role: "user", content: "如何用 JS 读取文件？"}
-        ]
-    })
-});
+**流式请求**:
+```python
+import requests
+import json
 
-const data = await response.json();
-console.log(data.answer);
+response = requests.post(
+    'http://localhost:8080/chat',
+    json={"prompt": "写一首诗", "stream": True},
+    stream=True
+)
+
+for line in response.iter_lines():
+    if line:
+        line = line.decode('utf-8')
+        if line.startswith('data: '):
+            data = json.loads(line[6:])
+            if data['type'] == 'content':
+                print(data['text'], end='', flush=True)
+```
+
+### Shell 脚本集成
+
+**批量处理**:
+```bash
+#!/bin/bash
+
+# 批量翻译文件
+for file in *.txt; do
+    content=$(cat "$file")
+    curl -X POST http://localhost:8080/chat \
+        -H "Content-Type: application/json" \
+        -d "{\"prompt\": \"翻译成英文: $content\"}" \
+        | jq -r '.answer' > "${file%.txt}_en.txt"
+done
+```
+
+**定时任务**:
+```bash
+# crontab -e
+# 每天早上 9 点生成日报
+0 9 * * * curl -X POST http://localhost:8080/chat \
+    -H "Content-Type: application/json" \
+    -d '{"prompt":"生成今日工作计划"}' \
+    | jq -r '.answer' | mail -s "Daily Report" user@example.com
 ```
 
 ## 开发说明

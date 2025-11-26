@@ -52,6 +52,6 @@ configs.json
 *.bak.*
 
 # Generated files
-generate-html
+/generate-html
 release-notes.html
 gh-pages/
