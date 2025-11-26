@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -122,9 +123,26 @@ func main() {
 		os.Exit(0)
 	}()
 	
+	// 获取服务器配置
+	serverConfig := handler.GetServerConfig()
+	
+	// 环境变量优先级最高
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		fmt.Sscanf(envPort, "%d", &serverConfig.Port)
+	}
+	if envHost := os.Getenv("HOST"); envHost != "" {
+		serverConfig.Host = envHost
+	}
+	
+	// 构建监听地址
+	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
+	
 	// 打印启动日志
-	log.Println("🌐 Gateway service starting on :8080")
+	log.Printf("🌐 Gateway service starting on %s", addr)
+	if serverConfig.Host == "0.0.0.0" {
+		log.Printf("📡 Access at: http://localhost:%d", serverConfig.Port)
+	}
 	
 	// 调用 http.ListenAndServe 启动服务器，使用 log.Fatal 包装以处理启动错误
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(addr, nil))
 }

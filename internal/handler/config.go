@@ -16,6 +16,12 @@ type ProfileConfig struct {
 	Env    map[string]string `json:"env"`
 }
 
+// ServerConfig 表示服务器配置
+type ServerConfig struct {
+	Port int    `json:"port"` // 端口号，默认 8080
+	Host string `json:"host"` // 监听地址，默认 0.0.0.0
+}
+
 // ReleaseNotesConfig 表示 release notes 服务配置
 type ReleaseNotesConfig struct {
 	RefreshIntervalMinutes int    `json:"refresh_interval_minutes"` // 刷新间隔（分钟），默认 60
@@ -25,6 +31,7 @@ type ReleaseNotesConfig struct {
 
 // Config 表示整个配置文件
 type Config struct {
+	Server       *ServerConfig            `json:"server,omitempty"`
 	Profiles     map[string]ProfileConfig `json:"profiles"`
 	Default      string                   `json:"default"`
 	ReleaseNotes *ReleaseNotesConfig      `json:"release_notes,omitempty"`
@@ -116,5 +123,25 @@ func GetReleaseNotesConfig() ReleaseNotesConfig {
 		RefreshIntervalMinutes: 60,
 		CacheTTLMinutes:        60,
 		StoragePath:            "data/release_notes.json",
+	}
+}
+
+// GetServerConfig 返回服务器配置，如果未配置则返回默认值
+func GetServerConfig() ServerConfig {
+	if globalConfig != nil && globalConfig.Server != nil {
+		cfg := *globalConfig.Server
+		// 设置默认值
+		if cfg.Port <= 0 {
+			cfg.Port = 8080
+		}
+		if cfg.Host == "" {
+			cfg.Host = "0.0.0.0"
+		}
+		return cfg
+	}
+	// 返回默认配置
+	return ServerConfig{
+		Port: 8080,
+		Host: "0.0.0.0",
 	}
 }

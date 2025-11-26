@@ -134,17 +134,23 @@ go build -o claude-cli-gateway
 ### 2. 启动服务
 
 ```bash
-# 方式一：直接运行可执行文件
-./claude-cli-gateway
+# 方式一：使用启动脚本（推荐）
+./start.sh                    # 默认端口 8080
+./start.sh -p 3000           # 自定义端口 3000
 
-# 方式二：使用 go run
-go run .
+# 方式二：使用环境变量
+PORT=9000 ./start.sh         # 端口 9000
 
-# 方式三：使用启动脚本（推荐）
-./start.sh
+# 方式三：直接运行
+./claude-cli-gateway         # 使用配置文件或默认端口
+PORT=3000 ./claude-cli-gateway  # 环境变量指定端口
 ```
 
-服务将在 `http://localhost:8080` 启动。
+服务将在 `http://localhost:8080` 启动（或你指定的端口）。
+
+**端口配置优先级**: 环境变量 > 配置文件 > 默认值(8080)
+
+详细配置请查看：[端口配置指南](docs/PORT_CONFIGURATION.md)
 
 ### 3. 测试接口
 
