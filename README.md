@@ -829,7 +829,7 @@ curl -X POST http://localhost:8080/chat \
 curl -X POST http://localhost:8080/chat \
   -H "Content-Type: application/json" \
   -d '{
-    "prompt": "你好，我是张三",
+    "prompt": "A股今天表现如何？",
     "new_session": true
   }'
 ```
@@ -839,7 +839,7 @@ curl -X POST http://localhost:8080/chat \
 curl -X POST http://localhost:8080/chat \
   -H "Content-Type: application/json" \
   -d '{
-    "prompt": "我叫什么名字？",
+    "prompt": "美国白宫今天都发生了什么新闻？",
     "session_id": "xxx-xxx-xxx"
   }'
 ```
