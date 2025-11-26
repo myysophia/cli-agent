@@ -19,13 +19,6 @@
 | `gemini` | Google Gemini CLI | gemini-2.5-pro, gemini-2.5-flash |
 | `qwen` | 阿里 Qwen Code CLI | qwen3-max |
 
-## 🌐 在线查看
-
-Release Notes 页面已自动部署到 GitHub Pages，每小时自动更新：
-
-**访问地址**：`https://<your-username>.github.io/<repository-name>/`
-
-详细设置说明请查看：[GitHub Pages 部署指南](docs/GITHUB_PAGES.md)
 
 ## 功能特性
 
