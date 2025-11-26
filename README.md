@@ -12,12 +12,77 @@
 | `gemini` | Google Gemini CLI | gemini-2.5-pro, gemini-2.5-flash |
 | `qwen` | 阿里 Qwen Code CLI | qwen3-max |
 
+## 🌐 在线查看
+
+Release Notes 页面已自动部署到 GitHub Pages，每小时自动更新：
+
+**访问地址**：`https://<your-username>.github.io/<repository-name>/`
+
+详细设置说明请查看：[GitHub Pages 部署指南](docs/GITHUB_PAGES.md)
+
 ## 功能特性
 
+### CLI 调用功能
 - 提供 HTTP POST 接口 `/invoke` 和 `/chat` 接收对话请求
 - 自动将对话历史转换为 CLI 的 prompt 格式
 - 支持系统提示词（system prompt）
 - **支持 5 种 CLI 工具**（Claude、Codex、Cursor、Gemini、Qwen）
+
+### Release Notes 功能
+- 📋 **API 接口**：获取各 CLI 工具的版本更新信息
+  - `GET /release-notes` - 获取所有 CLI 的 release notes
+  - `GET /release-notes/{cli_name}` - 获取指定 CLI 的 release notes
+- 🎨 **HTML 可视化界面**：`/release-notes/view`
+  - 标签式界面，支持搜索和过滤
+  - Markdown 渲染，自动链接 GitHub issues/PRs
+  - 版本对比，显示本地版本和最新版本
+- 🔄 **自动刷新**：定时从外部源获取最新数据（默认 1 小时）
+- 💾 **缓存机制**：内存缓存 + 文件持久化
+- ✅ **只显示正式版本**：自动过滤 alpha、beta、nightly、preview 等版本
+
+## 项目结构
+
+```
+dify-cli-gateway/
+├── cmd/
+│   └── server/
+│       └── main.go               # 主入口
+├── internal/                     # 私有应用代码
+│   ├── cli/                      # CLI 工具接口和实现
+│   │   ├── interface.go         # CLI 接口定义
+│   │   ├── factory.go           # CLI 工厂
+│   │   ├── claude.go            # Claude CLI 实现
+│   │   ├── cursor.go            # Cursor CLI 实现
+│   │   ├── codex.go             # Codex CLI 实现
+│   │   ├── gemini.go            # Gemini CLI 实现
+│   │   └── qwen.go              # Qwen CLI 实现
+│   ├── handler/                  # HTTP 处理器
+│   │   ├── handler.go           # 通用处理器
+│   │   ├── claude.go            # Claude 处理器
+│   │   ├── release_notes_handler.go  # Release Notes API 处理器
+│   │   ├── config.go            # 配置管理
+│   │   └── types.go             # 类型定义
+│   └── release_notes/            # Release Notes 功能模块
+│       ├── *_fetcher.go         # 各 CLI 的数据获取器
+│       ├── cache.go             # 缓存层
+│       ├── storage.go           # 持久化存储
+│       ├── service.go           # 核心服务
+│       ├── types.go             # 类型定义
+│       └── *_test.go            # 测试文件（含 Property-Based Tests）
+├── web/
+│   └── templates/
+│       └── release_notes.html   # Release Notes 查看器
+├── configs/                      # 配置文件
+│   ├── configs.json             # 当前配置
+│   └── configs.example.json     # 配置示例
+├── scripts/                      # 工具脚本
+├── docs/                         # 文档
+│   ├── CHANGELOG.md             # 更新日志
+│   └── SKILLS.md                # 技能文档
+├── data/                         # 数据文件
+├── logs/                         # 日志文件
+└── .kiro/specs/                  # 功能规格文档
+```
 - 支持 Claude Skills（访问本地文件和目录）
 - **支持 MCP 工具调用**（WebFetch、Playwright 等）
 - 支持会话管理（session_id 和 resume）

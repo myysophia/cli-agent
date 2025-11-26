@@ -11,7 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"dify-cli-gateway/release_notes"
+	"dify-cli-gateway/internal/handler"
+	"dify-cli-gateway/internal/release_notes"
 )
 
 var releaseNotesService *release_notes.ReleaseNotesService
@@ -53,23 +54,23 @@ func main() {
 	log.Println("📁 Logging to file:", logFile.Name())
 	
 	// 初始化配置
-	if err := initConfig(); err != nil {
+	if err := handler.InitConfig(); err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 	
 	// 使用 http.HandleFunc 注册 "/invoke" 路由到 handleInvoke
-	http.HandleFunc("/invoke", handleInvoke)
-	http.HandleFunc("/chat", handleChat)
+	http.HandleFunc("/invoke", handler.HandleInvoke)
+	http.HandleFunc("/chat", handler.HandleChat)
 	
 	// Initialize Release Notes Service with config
-	rnConfig := GetReleaseNotesConfig()
+	rnConfig := handler.GetReleaseNotesConfig()
 	serviceConfig := release_notes.ServiceConfig{
 		CacheTTL:        time.Duration(rnConfig.CacheTTLMinutes) * time.Minute,
 		RefreshInterval: time.Duration(rnConfig.RefreshIntervalMinutes) * time.Minute,
 		StoragePath:     rnConfig.StoragePath,
 	}
 	releaseNotesService = release_notes.NewReleaseNotesService(serviceConfig)
-	releaseNotesHandler := NewReleaseNotesHandler(releaseNotesService)
+	releaseNotesHandler := handler.NewReleaseNotesHandler(releaseNotesService)
 	
 	// Register release notes routes
 	http.HandleFunc("/release-notes", func(w http.ResponseWriter, r *http.Request) {

@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"dify-cli-gateway/release_notes"
+	"dify-cli-gateway/internal/release_notes"
 )
 
 // ReleaseNotesHandler handles HTTP requests for release notes

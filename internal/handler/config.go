@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -61,8 +61,8 @@ func (c *Config) getProfile(profileName string) (*ProfileConfig, error) {
 	return &profile, nil
 }
 
-// initConfig 初始化全局配置
-func initConfig() error {
+// InitConfig 初始化全局配置
+func InitConfig() error {
 	configPath := "configs.json"
 	
 	// 检查配置文件是否存在

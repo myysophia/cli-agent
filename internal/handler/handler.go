@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -14,8 +14,8 @@ var (
 	workflowSessionMu  sync.RWMutex
 )
 
-// handleInvoke 处理 /invoke 端点的 HTTP 请求
-func handleInvoke(w http.ResponseWriter, r *http.Request) {
+// HandleInvoke 处理 /invoke 端点的 HTTP 请求
+func HandleInvoke(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	log.Printf("📥 Received request: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
 	
@@ -79,8 +79,8 @@ func handleInvoke(w http.ResponseWriter, r *http.Request) {
 		totalDuration, parseDuration, buildDuration, cliDuration)
 }
 
-// handleChat 处理 /chat 端点的简化 HTTP 请求
-func handleChat(w http.ResponseWriter, r *http.Request) {
+// HandleChat 处理 /chat 端点的简化 HTTP 请求
+func HandleChat(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	log.Printf("📥 Received request: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
 	

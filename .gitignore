@@ -1,33 +1,25 @@
-# Binaries for programs and plugins
+# Binaries
+claude-cli-gateway
 *.exe
-*.exe~
 *.dll
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
+# Test binary
 *.test
 
 # Output of the go coverage tool
 *.out
 
+# Dependency directories
+vendor/
+
 # Go workspace file
 go.work
 
-# Build artifacts
-claude-cli-gateway
-dify-cli-gateway
-
-# Environment variables
+# Environment files
 .env
-.env.local
-
-# Configuration files (may contain sensitive tokens)
-configs.json
-
-# Logs
-logs/
-*.log
+*.env.local
 
 # IDE
 .vscode/
@@ -39,5 +31,27 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
-dify-cli-gateway-newdata/
+
+# Application data
+data/
+logs/
 *.log
+
+# Python virtual environments
+.venv/
+.venv_leyard/
+__pycache__/
+*.py[cod]
+
+# Config files (keep example)
+configs.json
+
+# Temporary files
+*.tmp
+*.bak
+*.bak.*
+
+# Generated files
+generate-html
+release-notes.html
+gh-pages/

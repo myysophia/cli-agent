@@ -1,11 +1,11 @@
-package main
+package handler
 
 import (
 	"fmt"
 	"log"
 	"strings"
 
-	"dify-cli-gateway/cli"
+	"dify-cli-gateway/internal/cli"
 )
 
 // buildPrompt 将 messages 拼接成单个 prompt 字符串

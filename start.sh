@@ -24,7 +24,7 @@ fi
 # 检查是否已构建
 if [ ! -f "claude-cli-gateway" ]; then
     echo "📦 Building project..."
-    go build -o claude-cli-gateway
+    go build -o claude-cli-gateway ./cmd/server
     echo "✅ Build completed"
     echo ""
 fi

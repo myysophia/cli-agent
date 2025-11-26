@@ -1,4 +1,4 @@
-package main
+package handler
 
 // Message 表示单条对话消息
 type Message struct {

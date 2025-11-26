@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI Release Notes</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .header-info {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tab:hover {
+            background: #f0f0f0;
+        }
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .cli-section {
+            display: none;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .cli-section.active {
+            display: block;
+        }
+        .cli-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        .cli-info h2 {
+            color: #333;
+        }
+        .version-info {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .version-info .latest {
+            color: #667eea;
+            font-weight: bold;
+        }
+        .release-list {
+            list-style: none;
+        }
+        .release-item {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .release-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .release-header:hover {
+            background: #f0f0f0;
+        }
+        .release-version {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        .release-date {
+            color: #888;
+            font-size: 0.9rem;
+            margin-left: 15px;
+        }
+        .release-toggle {
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+        .release-body {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: none;
+        }
+        .release-body.expanded {
+            display: block;
+        }
+        .changelog {
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        .release-link {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .release-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .release-link a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            .tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+            .tab {
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 CLI Release Notes</h1>
+            <div class="header-info">
+                Last updated: {{.GeneratedAt}}
+            </div>
+        </header>
+        
+        <div class="tabs">
+            {{range $name, $cli := .AllNotes.CLIs}}
+            <button class="tab" onclick="showCLI('{{$name}}')">
+                {{$cli.DisplayName}}
+                <span style="font-size: 0.8rem; opacity: 0.8; margin-left: 5px;">v{{$cli.LatestVersion}}</span>
+            </button>
+            {{end}}
+        </div>
+        
+        {{range $name, $cli := .AllNotes.CLIs}}
+        <div class="cli-section" id="cli-{{$name}}">
+            <div class="cli-info">
+                <h2>{{$cli.DisplayName}}</h2>
+                <div class="version-info">
+                    <div class="latest">Latest: v{{$cli.LatestVersion}}</div>
+                </div>
+            </div>
+            
+            <ul class="release-list">
+                {{range $idx, $release := $cli.Releases}}
+                <li class="release-item">
+                    <div class="release-header" onclick="toggleRelease('{{$name}}-{{$idx}}')">
+                        <div>
+                            <span class="release-version">v{{$release.Version}}</span>
+                            <span class="release-date">{{$release.ReleaseDate.Format "2006-01-02"}}</span>
+                        </div>
+                        <span class="release-toggle" id="toggle-{{$name}}-{{$idx}}">▼</span>
+                    </div>
+                    <div class="release-body" id="release-{{$name}}-{{$idx}}">
+                        <div class="changelog">{{$release.Changelog}}</div>
+                        {{if $release.URL}}
+                        <div class="release-link">
+                            <a href="{{$release.URL}}" target="_blank">View on GitHub →</a>
+                        </div>
+                        {{end}}
+                    </div>
+                </li>
+                {{end}}
+            </ul>
+        </div>
+        {{end}}
+    </div>
+
+    <script>
+        // Show first CLI by default
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstTab = document.querySelector('.tab');
+            if (firstTab) {
+                firstTab.click();
+            }
+        });
+
+        function showCLI(name) {
+            // Hide all sections
+            document.querySelectorAll('.cli-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected section
+            const section = document.getElementById('cli-' + name);
+            if (section) {
+                section.classList.add('active');
+            }
+            
+            // Activate selected tab
+            event.target.classList.add('active');
+        }
+
+        function toggleRelease(id) {
+            const body = document.getElementById('release-' + id);
+            const toggle = document.getElementById('toggle-' + id);
+            if (body.classList.contains('expanded')) {
+                body.classList.remove('expanded');
+                toggle.textContent = '▼';
+            } else {
+                body.classList.add('expanded');
+                toggle.textContent = '▲';
+            }
+        }
+    </script>
+</body>
+</html>

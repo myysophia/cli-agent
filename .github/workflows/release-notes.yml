@@ -1,0 +1,85 @@
+name: Generate Release Notes
+
+on:
+  schedule:
+    # 每小时运行一次（在每小时的第 0 分钟）
+    - cron: '0 * * * *'
+  workflow_dispatch: # 允许手动触发
+  push:
+    branches:
+      - main
+    paths:
+      - 'internal/release_notes/**'
+      - 'web/templates/**'
+      - '.github/workflows/release-notes.yml'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Build HTML generator
+        run: |
+          go build -o generate-html ./cmd/generate-html
+          chmod +x generate-html
+
+      - name: Generate HTML
+        run: |
+          ./generate-html
+          
+          if [ ! -f release-notes.html ]; then
+            echo "❌ Failed to generate HTML file"
+            exit 1
+          fi
+          
+          echo "✅ HTML generated successfully!"
+
+      - name: Prepare GitHub Pages content
+        run: |
+          mkdir -p gh-pages
+          mv release-notes.html gh-pages/index.html
+          
+          # 添加 CNAME 文件（如果需要自定义域名）
+          # echo "your-domain.com" > gh-pages/CNAME
+          
+          # 添加 .nojekyll 文件以禁用 Jekyll 处理
+          touch gh-pages/.nojekyll
+          
+          # 添加更新时间信息
+          echo "Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > gh-pages/last-update.txt
+          
+          echo "✅ GitHub Pages content prepared!"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages
+          publish_branch: gh-pages
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Update release notes - ${{ github.sha }}'
+
+      - name: Summary
+        run: |
+          echo "## 🎉 Release Notes Updated!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The release notes page has been successfully generated and deployed to GitHub Pages." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Last Updated:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**View at:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_STEP_SUMMARY
