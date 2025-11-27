@@ -1,228 +1,228 @@
-name: Cursor Agent Test
+# name: Cursor Agent Test
 
-on:
-  schedule:
-    # 每天 UTC 时间 8:00 运行（北京时间 16:00）
-    - cron: '0 8 * * *'
-  workflow_dispatch: # 允许手动触发
-    inputs:
-      test_prompt:
-        description: '自定义测试提示（可选）'
-        required: false
-        default: ''
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/cursor-agent-test.yml'
-      - '.cursor-agent/**'
+# on:
+#   schedule:
+#     # 每天 UTC 时间 8:00 运行（北京时间 16:00）
+#     - cron: '0 8 * * *'
+#   workflow_dispatch: # 允许手动触发
+#     inputs:
+#       test_prompt:
+#         description: '自定义测试提示（可选）'
+#         required: false
+#         default: ''
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - '.github/workflows/cursor-agent-test.yml'
+#       - '.cursor-agent/**'
 
-permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+# permissions:
+#   contents: write
+#   pull-requests: write
+#   issues: write
 
-env:
-  CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+# env:
+#   CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
 
-jobs:
-  cursor-agent-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+# jobs:
+#   cursor-agent-test:
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 30
     
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
 
-      - name: Set up Python (for MCP servers)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+#       - name: Set up Python (for MCP servers)
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: '3.11'
 
-      - name: Install uv (for MCP servers)
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+#       - name: Install uv (for MCP servers)
+#         run: |
+#           curl -LsSf https://astral.sh/uv/install.sh | sh
+#           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Cursor CLI
-        run: |
-          curl https://cursor.com/install -fsS | bash
-          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+#       - name: Install Cursor CLI
+#         run: |
+#           curl https://cursor.com/install -fsS | bash
+#           echo "$HOME/.cursor/bin" >> $GITHUB_PATH
 
-      - name: Verify Cursor CLI installation
-        run: |
-          cursor-agent --version || echo "Version check not available"
-          echo "✅ Cursor CLI installed successfully"
+#       - name: Verify Cursor CLI installation
+#         run: |
+#           cursor-agent --version || echo "Version check not available"
+#           echo "✅ Cursor CLI installed successfully"
 
-      - name: Setup MCP configuration
-        run: |
-          mkdir -p .cursor
-          cat > .cursor/mcp.json << 'EOF'
-          {
-            "mcpServers": {
-              "filesystem": {
-                "command": "uvx",
-                "args": ["mcp-server-filesystem", "--allowed-directories", "."],
-                "env": {}
-              },
-              "fetch": {
-                "command": "uvx",
-                "args": ["mcp-server-fetch"],
-                "env": {}
-              }
-            }
-          }
-          EOF
-          echo "✅ MCP configuration created"
-          cat .cursor/mcp.json
+#       - name: Setup MCP configuration
+#         run: |
+#           mkdir -p .cursor
+#           cat > .cursor/mcp.json << 'EOF'
+#           {
+#             "mcpServers": {
+#               "filesystem": {
+#                 "command": "uvx",
+#                 "args": ["mcp-server-filesystem", "--allowed-directories", "."],
+#                 "env": {}
+#               },
+#               "fetch": {
+#                 "command": "uvx",
+#                 "args": ["mcp-server-fetch"],
+#                 "env": {}
+#               }
+#             }
+#           }
+#           EOF
+#           echo "✅ MCP configuration created"
+#           cat .cursor/mcp.json
 
-      - name: Test 1 - Code Analysis
-        id: test1
-        continue-on-error: true
-        run: |
-          echo "🧪 Test 1: Analyzing project structure..."
-          cursor-agent -p "分析这个 Go 项目的结构，列出主要的包和它们的功能。请简洁回答。" \
-            --model claude-sonnet-4-20250514 \
-            --max-turns 3 \
-            2>&1 | tee test1_output.txt
-          echo "test1_status=$?" >> $GITHUB_OUTPUT
+#       - name: Test 1 - Code Analysis
+#         id: test1
+#         continue-on-error: true
+#         run: |
+#           echo "🧪 Test 1: Analyzing project structure..."
+#           cursor-agent -p "分析这个 Go 项目的结构，列出主要的包和它们的功能。请简洁回答。" \
+#             --model claude-sonnet-4-20250514 \
+#             --max-turns 3 \
+#             2>&1 | tee test1_output.txt
+#           echo "test1_status=$?" >> $GITHUB_OUTPUT
 
-      - name: Test 2 - Release Notes Check
-        id: test2
-        continue-on-error: true
-        run: |
-          echo "🧪 Test 2: Checking release notes functionality..."
-          cursor-agent -p "检查 internal/release_notes 目录下的代码，告诉我支持哪些 CLI 工具的 release notes 获取。" \
-            --model claude-sonnet-4-20250514 \
-            --max-turns 3 \
-            2>&1 | tee test2_output.txt
-          echo "test2_status=$?" >> $GITHUB_OUTPUT
+#       - name: Test 2 - Release Notes Check
+#         id: test2
+#         continue-on-error: true
+#         run: |
+#           echo "🧪 Test 2: Checking release notes functionality..."
+#           cursor-agent -p "检查 internal/release_notes 目录下的代码，告诉我支持哪些 CLI 工具的 release notes 获取。" \
+#             --model claude-sonnet-4-20250514 \
+#             --max-turns 3 \
+#             2>&1 | tee test2_output.txt
+#           echo "test2_status=$?" >> $GITHUB_OUTPUT
 
-      - name: Test 3 - API Endpoint Review
-        id: test3
-        continue-on-error: true
-        run: |
-          echo "🧪 Test 3: Reviewing API endpoints..."
-          cursor-agent -p "查看 internal/handler 目录，列出所有 HTTP API 端点及其功能。" \
-            --model claude-sonnet-4-20250514 \
-            --max-turns 3 \
-            2>&1 | tee test3_output.txt
-          echo "test3_status=$?" >> $GITHUB_OUTPUT
+#       - name: Test 3 - API Endpoint Review
+#         id: test3
+#         continue-on-error: true
+#         run: |
+#           echo "🧪 Test 3: Reviewing API endpoints..."
+#           cursor-agent -p "查看 internal/handler 目录，列出所有 HTTP API 端点及其功能。" \
+#             --model claude-sonnet-4-20250514 \
+#             --max-turns 3 \
+#             2>&1 | tee test3_output.txt
+#           echo "test3_status=$?" >> $GITHUB_OUTPUT
 
-      - name: Test 4 - MCP Tool Usage (Fetch)
-        id: test4
-        continue-on-error: true
-        run: |
-          echo "🧪 Test 4: Testing MCP fetch tool..."
-          cursor-agent -p "使用 fetch 工具获取 https://api.github.com/repos/anthropics/claude-code/releases/latest 的内容，告诉我 Claude CLI 的最新版本号。" \
-            --model claude-sonnet-4-20250514 \
-            --max-turns 5 \
-            2>&1 | tee test4_output.txt
-          echo "test4_status=$?" >> $GITHUB_OUTPUT
+#       - name: Test 4 - MCP Tool Usage (Fetch)
+#         id: test4
+#         continue-on-error: true
+#         run: |
+#           echo "🧪 Test 4: Testing MCP fetch tool..."
+#           cursor-agent -p "使用 fetch 工具获取 https://api.github.com/repos/anthropics/claude-code/releases/latest 的内容，告诉我 Claude CLI 的最新版本号。" \
+#             --model claude-sonnet-4-20250514 \
+#             --max-turns 5 \
+#             2>&1 | tee test4_output.txt
+#           echo "test4_status=$?" >> $GITHUB_OUTPUT
 
-      - name: Test 5 - Custom Prompt (if provided)
-        id: test5
-        if: ${{ github.event.inputs.test_prompt != '' }}
-        continue-on-error: true
-        run: |
-          echo "🧪 Test 5: Running custom prompt..."
-          cursor-agent -p "${{ github.event.inputs.test_prompt }}" \
-            --model claude-sonnet-4-20250514 \
-            --max-turns 5 \
-            2>&1 | tee test5_output.txt
-          echo "test5_status=$?" >> $GITHUB_OUTPUT
+#       - name: Test 5 - Custom Prompt (if provided)
+#         id: test5
+#         if: ${{ github.event.inputs.test_prompt != '' }}
+#         continue-on-error: true
+#         run: |
+#           echo "🧪 Test 5: Running custom prompt..."
+#           cursor-agent -p "${{ github.event.inputs.test_prompt }}" \
+#             --model claude-sonnet-4-20250514 \
+#             --max-turns 5 \
+#             2>&1 | tee test5_output.txt
+#           echo "test5_status=$?" >> $GITHUB_OUTPUT
 
-      - name: Generate Test Report
-        run: |
-          echo "# 🤖 Cursor Agent Test Report" > test_report.md
-          echo "" >> test_report.md
-          echo "**Run Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> test_report.md
-          echo "**Triggered By:** ${{ github.event_name }}" >> test_report.md
-          echo "**Commit:** ${{ github.sha }}" >> test_report.md
-          echo "" >> test_report.md
+#       - name: Generate Test Report
+#         run: |
+#           echo "# 🤖 Cursor Agent Test Report" > test_report.md
+#           echo "" >> test_report.md
+#           echo "**Run Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> test_report.md
+#           echo "**Triggered By:** ${{ github.event_name }}" >> test_report.md
+#           echo "**Commit:** ${{ github.sha }}" >> test_report.md
+#           echo "" >> test_report.md
           
-          echo "## 📊 Test Results Summary" >> test_report.md
-          echo "" >> test_report.md
-          echo "| Test | Description | Status |" >> test_report.md
-          echo "|------|-------------|--------|" >> test_report.md
+#           echo "## 📊 Test Results Summary" >> test_report.md
+#           echo "" >> test_report.md
+#           echo "| Test | Description | Status |" >> test_report.md
+#           echo "|------|-------------|--------|" >> test_report.md
           
-          # Test 1
-          if [ -f test1_output.txt ]; then
-            echo "| Test 1 | Code Analysis | ✅ Completed |" >> test_report.md
-          else
-            echo "| Test 1 | Code Analysis | ❌ Failed |" >> test_report.md
-          fi
+#           # Test 1
+#           if [ -f test1_output.txt ]; then
+#             echo "| Test 1 | Code Analysis | ✅ Completed |" >> test_report.md
+#           else
+#             echo "| Test 1 | Code Analysis | ❌ Failed |" >> test_report.md
+#           fi
           
-          # Test 2
-          if [ -f test2_output.txt ]; then
-            echo "| Test 2 | Release Notes Check | ✅ Completed |" >> test_report.md
-          else
-            echo "| Test 2 | Release Notes Check | ❌ Failed |" >> test_report.md
-          fi
+#           # Test 2
+#           if [ -f test2_output.txt ]; then
+#             echo "| Test 2 | Release Notes Check | ✅ Completed |" >> test_report.md
+#           else
+#             echo "| Test 2 | Release Notes Check | ❌ Failed |" >> test_report.md
+#           fi
           
-          # Test 3
-          if [ -f test3_output.txt ]; then
-            echo "| Test 3 | API Endpoint Review | ✅ Completed |" >> test_report.md
-          else
-            echo "| Test 3 | API Endpoint Review | ❌ Failed |" >> test_report.md
-          fi
+#           # Test 3
+#           if [ -f test3_output.txt ]; then
+#             echo "| Test 3 | API Endpoint Review | ✅ Completed |" >> test_report.md
+#           else
+#             echo "| Test 3 | API Endpoint Review | ❌ Failed |" >> test_report.md
+#           fi
           
-          # Test 4
-          if [ -f test4_output.txt ]; then
-            echo "| Test 4 | MCP Fetch Tool | ✅ Completed |" >> test_report.md
-          else
-            echo "| Test 4 | MCP Fetch Tool | ❌ Failed |" >> test_report.md
-          fi
+#           # Test 4
+#           if [ -f test4_output.txt ]; then
+#             echo "| Test 4 | MCP Fetch Tool | ✅ Completed |" >> test_report.md
+#           else
+#             echo "| Test 4 | MCP Fetch Tool | ❌ Failed |" >> test_report.md
+#           fi
           
-          # Test 5 (custom)
-          if [ -f test5_output.txt ]; then
-            echo "| Test 5 | Custom Prompt | ✅ Completed |" >> test_report.md
-          elif [ "${{ github.event.inputs.test_prompt }}" != "" ]; then
-            echo "| Test 5 | Custom Prompt | ❌ Failed |" >> test_report.md
-          fi
+#           # Test 5 (custom)
+#           if [ -f test5_output.txt ]; then
+#             echo "| Test 5 | Custom Prompt | ✅ Completed |" >> test_report.md
+#           elif [ "${{ github.event.inputs.test_prompt }}" != "" ]; then
+#             echo "| Test 5 | Custom Prompt | ❌ Failed |" >> test_report.md
+#           fi
           
-          echo "" >> test_report.md
-          echo "## 📝 Detailed Results" >> test_report.md
-          echo "" >> test_report.md
+#           echo "" >> test_report.md
+#           echo "## 📝 Detailed Results" >> test_report.md
+#           echo "" >> test_report.md
           
-          for i in 1 2 3 4 5; do
-            if [ -f "test${i}_output.txt" ]; then
-              echo "### Test $i Output" >> test_report.md
-              echo '```' >> test_report.md
-              head -100 "test${i}_output.txt" >> test_report.md
-              echo '```' >> test_report.md
-              echo "" >> test_report.md
-            fi
-          done
+#           for i in 1 2 3 4 5; do
+#             if [ -f "test${i}_output.txt" ]; then
+#               echo "### Test $i Output" >> test_report.md
+#               echo '```' >> test_report.md
+#               head -100 "test${i}_output.txt" >> test_report.md
+#               echo '```' >> test_report.md
+#               echo "" >> test_report.md
+#             fi
+#           done
           
-          echo "✅ Test report generated"
-          cat test_report.md
+#           echo "✅ Test report generated"
+#           cat test_report.md
 
-      - name: Upload Test Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: cursor-agent-test-report
-          path: |
-            test_report.md
-            test*_output.txt
-          retention-days: 30
+#       - name: Upload Test Report
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: cursor-agent-test-report
+#           path: |
+#             test_report.md
+#             test*_output.txt
+#           retention-days: 30
 
-      - name: Post Summary
-        run: |
-          cat test_report.md >> $GITHUB_STEP_SUMMARY
+#       - name: Post Summary
+#         run: |
+#           cat test_report.md >> $GITHUB_STEP_SUMMARY
 
-      - name: Check for failures
-        run: |
-          failed=0
-          for i in 1 2 3 4; do
-            if [ ! -f "test${i}_output.txt" ]; then
-              failed=$((failed + 1))
-            fi
-          done
+#       - name: Check for failures
+#         run: |
+#           failed=0
+#           for i in 1 2 3 4; do
+#             if [ ! -f "test${i}_output.txt" ]; then
+#               failed=$((failed + 1))
+#             fi
+#           done
           
-          if [ $failed -gt 2 ]; then
-            echo "❌ Too many tests failed ($failed/4)"
-            exit 1
-          else
-            echo "✅ Tests completed with $failed failures"
-          fi
+#           if [ $failed -gt 2 ]; then
+#             echo "❌ Too many tests failed ($failed/4)"
+#             exit 1
+#           else
+#             echo "✅ Tests completed with $failed failures"
+#           fi
