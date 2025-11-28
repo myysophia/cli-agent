@@ -1,0 +1,17 @@
+{
+  "tasks": {
+    "custom_sector": {
+      "name": "自定义板块分析",
+      "title": "📊 [板块名称] 分析报告",
+      "prompt": "请使用 aktools MCP 工具对指定板块进行分析：\n\n**注意：请在执行前询问用户要分析的板块名称**\n\n**步骤 1: 板块概况**\n- 使用 stock_sector_fund_flow_rank 获取该板块资金流向\n- 使用 stock_news_global 获取相关行业新闻\n\n**步骤 2: 个股筛选**\n- 使用 search 查找板块内主要个股\n- 使用 stock_info 获取基本信息\n- 使用 stock_indicators_a 获取关键指标\n\n**步骤 3: 深度分析**\n- 筛选3-5只优质标的\n- 使用 stock_prices 分析价格走势\n- 使用 trading_suggest 获取投资建议\n\n**步骤 4: 发送报告**\n使用 notify MCP 工具发送报告。"
+    },
+    "hot_stocks": {
+      "name": "今日热门股票",
+      "title": "🔥 今日热门股票",
+      "prompt": "请使用 aktools MCP 工具分析今日热门股票：\n\n**步骤 1: 获取热门股**\n- 使用 stock_zt_pool_em 获取涨停股池\n- 使用 stock_zt_pool_strong_em 获取强势股池\n- 使用 stock_lhb_ggtj_sina 获取龙虎榜数据\n\n**步骤 2: 筛选分析**\n- 选择3-5只最具潜力的股票\n- 使用 stock_info 和 stock_indicators_a 获取详细信息\n- 使用 stock_news 获取相关新闻\n\n**步骤 3: 投资建议**\n- 使用 trading_suggest 获取AI建议\n- 给出操作策略和风险提示\n\n**步骤 4: 发送报告**\n使用 notify MCP 工具发送报告，标题为「🔥 今日热门股票」。"
+    }
+  },
+  "groups": {
+    "custom": ["custom_sector", "hot_stocks"]
+  }
+}

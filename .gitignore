@@ -56,3 +56,5 @@ configs.json
 /generate-html
 release-notes.html
 gh-pages/
+docs/*
+scripts/prompts.json
