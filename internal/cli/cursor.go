@@ -32,19 +32,28 @@ func (c *CursorCLI) Name() string {
 func (c *CursorCLI) Run(opts *RunOptions) (string, error) {
 	var args []string
 
-	// 基础参数：使用 print 模式、强制模式、浏览器支持、JSON 输出
-	args = []string{"-p", "-f", "--browser", "--output-format", "json"}
+	// 基础参数：使用 print 模式（非交互）、强制模式、浏览器支持、JSON 输出
+	// --print 参数确保在非交互环境（如 HTTP 请求、crontab）中正常运行
+	args = []string{"--print", "--force", "--browser", "--output-format", "json"}
 
+	// 检测是否为 HTTP 请求（非交互环境）
+	// HTTP_REQUEST 标志由 handler 设置，用于区分 HTTP 请求和 CLI 直接调用
+	isHTTPRequest := opts.Env != nil && opts.Env["HTTP_REQUEST"] == "true"
+	
 	// 会话管理
+	// 在 HTTP 请求中（非交互环境），避免使用 --resume 触发 raw mode 错误
+	// 在交互环境中（CLI 直接调用），支持会话恢复以支持多轮对话
 	if opts.SessionID != "" {
 		args = append(args, "--resume", opts.SessionID)
 		log.Printf("🔄 [Cursor] Resuming session: %s", opts.SessionID)
 	} else if opts.NewSession {
-		log.Printf("🆕 [Cursor] Creating new session")
-	} else {
-		// 默认继续最近的会话
+		log.Printf("🆕 [Cursor] Creating new session (explicit)")
+	} else if !isHTTPRequest {
+		// 仅在交互环境中使用 --resume 恢复最后一个会话
 		args = append(args, "--resume")
-		log.Printf("🔄 [Cursor] Resuming last session")
+		log.Printf("🔄 [Cursor] Resuming last session (interactive mode)")
+	} else {
+		log.Printf("🆕 [Cursor] Creating new session (HTTP request mode)")
 	}
 
 	// 模型选择
@@ -77,7 +86,17 @@ func (c *CursorCLI) Run(opts *RunOptions) (string, error) {
 	log.Printf("⚙️  [Cursor] Executing: cursor-agent %s", strings.Join(args, " "))
 
 	cmd := exec.Command("cursor-agent", args...)
-	cmd.Env = buildEnv(opts.Env)
+	
+	// 构建环境变量，添加禁用 TTY 的配置
+	env := opts.Env
+	if env == nil {
+		env = make(map[string]string)
+	}
+	// 禁用 Ink 的 raw mode，避免在非交互环境中出错
+	env["CI"] = "true"
+	env["TERM"] = "dumb"
+	
+	cmd.Env = buildEnv(env)
 
 	output, err := cmd.CombinedOutput()
 	log.Printf("📊 [Cursor] Output length: %d bytes", len(output))

@@ -51,6 +51,11 @@ func loadConfig(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file: %v", err)
 	}
 
+	// 调试：打印 cursor profile 的 model 字段
+	if cursorProfile, ok := config.Profiles["cursor"]; ok {
+		log.Printf("🔍 DEBUG: cursor profile model = '%s'", cursorProfile.Model)
+	}
+
 	return &config, nil
 }
 

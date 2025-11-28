@@ -75,13 +75,21 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	if globalConfig != nil {
 		profile, err := globalConfig.getProfile(profileName)
 		if err == nil {
+			log.Printf("📋 Profile loaded: %+v", profile)
 			opts.Skills = profile.Skills
 			opts.Env = profile.Env
 			opts.Model = profile.Model
+			log.Printf("📋 Model from config: %s (profile.Model=%s)", opts.Model, profile.Model)
 		} else {
 			log.Printf("⚠️  %v, using default environment", err)
 		}
 	}
+	
+	// 标记这是 HTTP 请求，避免在非交互环境中使用 --resume
+	if opts.Env == nil {
+		opts.Env = make(map[string]string)
+	}
+	opts.Env["HTTP_REQUEST"] = "true"
 
 	// 执行 CLI
 	return runner.Run(opts)

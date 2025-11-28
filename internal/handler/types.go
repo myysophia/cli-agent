@@ -16,7 +16,8 @@ type InvokeRequest struct {
 
 // ChatRequest 表示简化的聊天请求
 type ChatRequest struct {
-	Prompt         string   `json:"prompt"`
+	Prompt         string   `json:"prompt"`                     // 用户消息（优先使用）
+	Message        string   `json:"message"`                    // 用户消息（兼容字段）
 	System         string   `json:"system"`
 	Profile        string   `json:"profile,omitempty"`          // 可选：指定使用的配置 profile
 	CLI            string   `json:"cli,omitempty"`              // 可选：CLI 工具名称（"claude" 或 "codex"，默认 "claude"）

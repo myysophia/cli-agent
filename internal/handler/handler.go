@@ -103,12 +103,18 @@ func HandleChat(w http.ResponseWriter, r *http.Request) {
 	}
 	parseDuration := time.Since(parseStart)
 
+	// 兼容 message 和 prompt 字段
+	prompt := req.Prompt
+	if prompt == "" && req.Message != "" {
+		prompt = req.Message
+	}
+	
 	profileInfo := req.Profile
 	if profileInfo == "" {
 		profileInfo = "default"
 	}
 	log.Printf("📝 Request parsed - Prompt: %q, System: %q, Profile: %s (took %v)", 
-		req.Prompt, req.System, profileInfo, parseDuration)
+		prompt, req.System, profileInfo, parseDuration)
 	
 	// 处理 workflow_run_id：自动管理会话
 	sessionID := req.SessionID
@@ -137,7 +143,7 @@ func HandleChat(w http.ResponseWriter, r *http.Request) {
 	// 调用 runCLI 函数执行 CLI（传入 cli、prompt、system、profile、session_id、new_session、allowed_tools 和 permission_mode）
 	log.Println("🚀 Calling CLI...")
 	cliStart := time.Now()
-	result, err := runCLI(req.CLI, req.Prompt, req.System, req.Profile, sessionID, newSession, req.AllowedTools, req.PermissionMode)
+	result, err := runCLI(req.CLI, prompt, req.System, req.Profile, sessionID, newSession, req.AllowedTools, req.PermissionMode)
 	cliDuration := time.Since(cliStart)
 	
 	if err != nil {
