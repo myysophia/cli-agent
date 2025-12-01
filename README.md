@@ -2,6 +2,8 @@
 
 一个极简的 Go HTTP 网关服务，将 HTTP 请求桥接到多种 AI CLI 工具。通过统一的 HTTP 接口调用各种 CLI 的无头模式，让任何支持 HTTP 的应用（Web 应用、移动端、IoT 设备等）都能使用这些 CLI 的强大能力。
 
+![系统架构图](./images/architecture.svg)
+
 [集成dify,实现多轮对话Agent.](https://github.com/myysophia/cli-agent/tree/main/images)
 
 **核心特性**：
