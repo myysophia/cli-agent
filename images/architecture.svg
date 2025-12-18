@@ -124,7 +124,7 @@
 
   <!-- Bottom: AI Models -->
   <g class="fade-in">
-    <text x="450" y="350" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="600" fill="#475569">AI Models (CLI Interface)</text>
+    <text x="450" y="350" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="600" fill="#475569">MIMO LLM Models (CLI Interface)</text>
 
     <!-- Qwen -->
     <rect x="60" y="365" width="140" height="40" rx="8" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-width="2"/>
