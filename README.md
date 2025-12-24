@@ -6,7 +6,7 @@
 
 [集成dify,实现多轮对话Agent.](https://github.com/myysophia/cli-agent/tree/main/images)
 
-[集成bisheng,实现多轮对话Agent.]([https://github.com/myysophia/cli-agent/tree/main/images](https://github.com/myysophia/cli-agent/blob/main/images/bisheng%E6%8A%95%E7%A0%94%E6%99%BA%E8%83%BD%E4%BD%93.png))
+[集成bisheng,实现多轮对话Agent.](https://github.com/myysophia/cli-agent/blob/main/images/bisheng%E6%8A%95%E7%A0%94%E6%99%BA%E8%83%BD%E4%BD%93.png)
 
 
 **核心特性**：
