@@ -58,3 +58,4 @@ release-notes.html
 gh-pages/
 docs/*
 scripts/prompts.json
+openapi.json
