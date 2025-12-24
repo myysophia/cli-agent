@@ -159,6 +159,34 @@ PORT=3000 ./claude-cli-gateway  # 环境变量指定端口
 
 详细配置请查看：[端口配置指南](docs/PORT_CONFIGURATION.md)
 
+## Docker 部署
+
+> 镜像默认使用 `configs/configs.example.json` 作为 `configs.json`，建议通过挂载自定义配置覆盖。
+
+### 构建镜像
+
+```bash
+docker build -t dify-cli-gateway:local .
+```
+
+### 运行容器
+
+```bash
+# 挂载自定义配置文件（推荐）
+docker run --rm -p 8080:8080 \
+  -v "$(pwd)/configs.json:/app/configs.json:ro" \
+  dify-cli-gateway:local
+
+# 仅使用环境变量（不提供 configs.json）
+docker run --rm -p 8080:8080 \
+  -e PORT=8080 \
+  dify-cli-gateway:local
+```
+
+### GitHub Actions 自动构建镜像
+
+默认推送到 `ghcr.io/<owner>/<repo>`，需要在仓库设置中开启 `Packages` 写权限。
+
 ### 3. 测试接口
 
 使用 curl 测试：

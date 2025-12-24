@@ -1,0 +1,10 @@
+.git
+.github
+logs
+data
+images
+docs
+configs.json
+configs/configs.json
+**/*.log
+**/.DS_Store
