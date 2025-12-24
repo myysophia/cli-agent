@@ -1,0 +1,20 @@
+{
+  "autoRun": true,
+  "permissions": {
+    "allow": [
+      "Shell(uvx)",
+      "Shell(node)",
+      "Shell(npx)",
+      "Shell(python)",
+      "Shell(curl)",
+      "Read(**/*)",
+      "Write(reports/**)",
+      "Write(analysis/**)"
+    ],
+    "deny": [
+      "Shell(rm)",
+      "Write(**/.env*)",
+      "Write(**/*.key)"
+    ]
+  }
+}

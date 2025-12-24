@@ -24,7 +24,6 @@ go.work
 # IDE
 .vscode/
 .idea/
-.cursor/
 *.swp
 *.swo
 *~
@@ -59,3 +58,4 @@ gh-pages/
 docs/*
 scripts/prompts.json
 openapi.json
+.cursor/rules/stock-playbook.mdc
