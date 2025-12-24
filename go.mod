@@ -1,6 +1,6 @@
 module dify-cli-gateway
 
-go 1.24.1
+go 1.22
 
 require (
 	github.com/leanovate/gopter v0.2.11 // indirect
