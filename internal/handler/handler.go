@@ -118,7 +118,7 @@ func HandleChat(w http.ResponseWriter, r *http.Request) {
 	
 	// 处理 workflow_run_id：自动管理会话
 	sessionID := req.SessionID
-	newSession := req.NewSession
+	newSession := bool(req.NewSession) // 转换 FlexBool 为 bool
 	
 	if req.WorkflowRunID != "" {
 		log.Printf("🔗 Workflow Run ID: %s", req.WorkflowRunID)
@@ -143,7 +143,7 @@ func HandleChat(w http.ResponseWriter, r *http.Request) {
 	// 调用 runCLI 函数执行 CLI（传入 cli、prompt、system、profile、session_id、new_session、allowed_tools 和 permission_mode）
 	log.Println("🚀 Calling CLI...")
 	cliStart := time.Now()
-	result, err := runCLI(req.CLI, prompt, req.System, req.Profile, sessionID, newSession, req.AllowedTools, req.PermissionMode)
+	result, err := runCLI(req.CLI, prompt, req.System, req.Profile, sessionID, newSession, []string(req.AllowedTools), req.PermissionMode)
 	cliDuration := time.Since(cliStart)
 	
 	if err != nil {

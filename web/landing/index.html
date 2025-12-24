@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Gateway | The Headless Runtime for AI CLIs</title>
+    <meta name="description" content="Transform local AI CLI tools into high-performance HTTP microservices. The infrastructure layer for the next generation of AI applications.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                <span class="logo-icon">⚡</span>
+                AI Gateway
+            </a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">Architecture</a>
+                <a href="https://github.com/myysophia/cli-agent" target="_blank" class="github-link">GitHub</a>
+                <a href="#" class="btn btn-sm btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <div class="badge">v1.0 Public Beta</div>
+                <h1 class="hero-title">
+                    The <span class="gradient-text">Headless Runtime</span> <br>
+                    for AI CLIs
+                </h1>
+                <p class="hero-subtitle">
+                    Stop building wrappers. Start building infrastructure. <br>
+                    Transform local terminal tools like Claude, Cursor, and Gemini into high-concurrency HTTP microservices with real-time streaming.
+                </p>
+                <div class="cta-group">
+                    <a href="#" class="btn btn-primary">
+                        <span>Deploy Gateway</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="#" class="btn btn-secondary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        Read the Manifesto
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="terminal-title">gateway-service — zsh</div>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="code-line"><span class="prompt">➜</span> <span class="cmd">curl</span> -X POST /chat \</div>
+                        <div class="code-line indent">  -d '{"prompt": "Analyze system logs", "stream": true}'</div>
+                        <div class="code-line"><span class="success">HTTP/1.1 200 OK</span></div>
+                        <div class="code-line"><span class="info">Content-Type: text/event-stream</span></div>
+                        <div class="code-line spacer"></div>
+                        <div class="code-line stream-data">data: {"type": "start", "session_id": "sess_8x9..."}</div>
+                        <div class="code-line stream-data">data: {"type": "content", "text": "Scanning"}</div>
+                        <div class="code-line stream-data">data: {"type": "content", "text": " local"}</div>
+                        <div class="code-line stream-data">data: {"type": "content", "text": " directories..."}</div>
+                        <div class="code-line cursor-line">data: {"type": "content", "text": " Found 3 issues."}<span class="cursor">█</span></div>
+                    </div>
+                    <div class="glow-effect"></div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-bg-glow"></div>
+    </header>
+
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Infrastructure, Not Middleware</h2>
+                <p>Designed for performance, security, and scalability.</p>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="card-icon icon-protocol"></div>
+                    <h3>Protocol Adapter</h3>
+                    <p>Seamlessly transcodes raw CLI stdout/stderr streams into standard Server-Sent Events (SSE). No more regex parsing in your app.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="card-icon icon-orchestration"></div>
+                    <h3>Process Orchestration</h3>
+                    <p>Manages headless CLI processes with auto-recovery, timeout handling, and zombie process cleanup. Built on Go's robust concurrency.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="card-icon icon-security"></div>
+                    <h3>Security Sandbox</h3>
+                    <p>Fine-grained permission controls. Run AI agents in isolated environments with strict file system access policies.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="split-layout">
+                <div class="content-side">
+                    <h2>Unlock Native Capabilities</h2>
+                    <p>Web APIs are limited. Local CLIs are not. AI Gateway bridges the gap, giving your web apps access to:</p>
+                    <ul class="capability-list">
+                        <li>
+                            <span class="check">✓</span>
+                            <div>
+                                <strong>Local File System Access</strong>
+                                <span>Let Claude analyze gigabytes of logs directly on your server.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <div>
+                                <strong>Private Network Access</strong>
+                                <span>Agents can curl internal endpoints not exposed to the public internet.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <div>
+                                <strong>Custom Toolchains</strong>
+                                <span>Integrate with any binary in your $PATH via MCP.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="visual-side">
+                    <div class="architecture-diagram">
+                        <!-- CSS Grid Diagram -->
+                        <div class="node client">Web App</div>
+                        <div class="connection">HTTP/SSE</div>
+                        <div class="node gateway">
+                            <span class="label">AI Gateway</span>
+                            <div class="internal-nodes">
+                                <span class="mini-node">Auth</span>
+                                <span class="mini-node">Queue</span>
+                                <span class="mini-node">Stream</span>
+                            </div>
+                        </div>
+                        <div class="connection">STDIO</div>
+                        <div class="node cli-group">
+                            <div class="cli-node">Claude</div>
+                            <div class="cli-node">Cursor</div>
+                            <div class="cli-node">Gemini</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <span class="logo-icon">⚡</span>
+                <p>&copy; 2025 AI Gateway. Open Source Infrastructure.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#">Documentation</a>
+                <a href="#">API Reference</a>
+                <a href="#">GitHub</a>
+                <a href="#">Twitter</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple intersection observer for fade-in animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.feature-card, .split-layout').forEach(el => {
+            el.classList.add('fade-in-section');
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
