@@ -18,7 +18,7 @@ var (
 func HandleInvoke(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	log.Printf("📥 Received request: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
-	
+
 	// 检查 HTTP 方法是否为 POST
 	if r.Method != http.MethodPost {
 		log.Printf("❌ Method not allowed: %s", r.Method)
@@ -42,9 +42,15 @@ func HandleInvoke(w http.ResponseWriter, r *http.Request) {
 	if profileInfo == "" {
 		profileInfo = "default"
 	}
-	log.Printf("📝 Request parsed - System: %q, Messages: %d, Profile: %s (took %v)", 
+	log.Printf("📝 Request parsed - System: %q, Messages: %d, Profile: %s (took %v)",
 		req.System, len(req.Messages), profileInfo, parseDuration)
-	
+
+	if promptSource, guarded := shouldGuardMessages(req.Messages); guarded {
+		writeGuardedResponse(w, promptSource)
+		log.Printf("📤 Response sent successfully (guarded)")
+		return
+	}
+
 	// 调用 buildPrompt 函数构建 prompt
 	buildStart := time.Now()
 	prompt := buildPrompt(req.Messages)
@@ -56,7 +62,7 @@ func HandleInvoke(w http.ResponseWriter, r *http.Request) {
 	cliStart := time.Now()
 	result, err := runCLI(req.CLI, prompt, req.System, req.Profile, "", false, nil, "")
 	cliDuration := time.Since(cliStart)
-	
+
 	if err != nil {
 		// 如果 runCLI 返回错误，返回 500 错误响应
 		log.Printf("❌ CLI failed after %v: %v", cliDuration, err)
@@ -66,16 +72,16 @@ func HandleInvoke(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("✅ CLI succeeded, response length: %d chars (took %v)", len(result), cliDuration)
-	
+
 	// 如果成功，构建 InvokeResponse 并返回 200 响应
 	// 设置响应头 Content-Type 为 application/json
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(InvokeResponse{Answer: result})
-	
+
 	totalDuration := time.Since(startTime)
 	log.Printf("📤 Response sent successfully")
-	log.Printf("⏱️  Total request time: %v (parse: %v, build: %v, CLI: %v)", 
+	log.Printf("⏱️  Total request time: %v (parse: %v, build: %v, CLI: %v)",
 		totalDuration, parseDuration, buildDuration, cliDuration)
 }
 
@@ -83,7 +89,7 @@ func HandleInvoke(w http.ResponseWriter, r *http.Request) {
 func HandleChat(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	log.Printf("📥 Received request: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
-	
+
 	// 检查 HTTP 方法是否为 POST
 	if r.Method != http.MethodPost {
 		log.Printf("❌ Method not allowed: %s", r.Method)
@@ -108,26 +114,32 @@ func HandleChat(w http.ResponseWriter, r *http.Request) {
 	if prompt == "" && req.Message != "" {
 		prompt = req.Message
 	}
-	
+
 	profileInfo := req.Profile
 	if profileInfo == "" {
 		profileInfo = "default"
 	}
-	log.Printf("📝 Request parsed - Prompt: %q, System: %q, Profile: %s (took %v)", 
+	log.Printf("📝 Request parsed - Prompt: %q, System: %q, Profile: %s (took %v)",
 		prompt, req.System, profileInfo, parseDuration)
-	
+
+	if shouldGuardPrompt(prompt) {
+		writeGuardedResponse(w, prompt)
+		log.Printf("📤 Response sent successfully (guarded)")
+		return
+	}
+
 	// 处理 workflow_run_id：自动管理会话
 	sessionID := req.SessionID
 	newSession := bool(req.NewSession) // 转换 FlexBool 为 bool
-	
+
 	if req.WorkflowRunID != "" {
 		log.Printf("🔗 Workflow Run ID: %s", req.WorkflowRunID)
-		
+
 		// 检查是否已有对应的 session_id
 		workflowSessionMu.RLock()
 		existingSessionID, exists := workflowSessionMap[req.WorkflowRunID]
 		workflowSessionMu.RUnlock()
-		
+
 		if exists {
 			// 已存在，使用现有的 session_id
 			sessionID = existingSessionID
@@ -139,13 +151,13 @@ func HandleChat(w http.ResponseWriter, r *http.Request) {
 			log.Printf("🆕 New workflow run, will create new session")
 		}
 	}
-	
+
 	// 调用 runCLI 函数执行 CLI（传入 cli、prompt、system、profile、session_id、new_session、allowed_tools 和 permission_mode）
 	log.Println("🚀 Calling CLI...")
 	cliStart := time.Now()
 	result, err := runCLI(req.CLI, prompt, req.System, req.Profile, sessionID, newSession, []string(req.AllowedTools), req.PermissionMode)
 	cliDuration := time.Since(cliStart)
-	
+
 	if err != nil {
 		// 如果 runCLI 返回错误，返回 500 错误响应
 		log.Printf("❌ CLI failed after %v: %v", cliDuration, err)
@@ -155,7 +167,7 @@ func HandleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("✅ CLI succeeded, response length: %d chars (took %v)", len(result), cliDuration)
-	
+
 	// 如果有 workflow_run_id，保存映射关系
 	if req.WorkflowRunID != "" && newSession {
 		// 从返回的 JSON 中提取 session_id
@@ -167,15 +179,15 @@ func HandleChat(w http.ResponseWriter, r *http.Request) {
 			log.Printf("💾 Saved mapping: workflow_run_id=%s → session_id=%s", req.WorkflowRunID, cliOut.SessionID)
 		}
 	}
-	
+
 	// 如果成功，构建 InvokeResponse 并返回 200 响应
 	// 设置响应头 Content-Type 为 application/json
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(InvokeResponse{Answer: result})
-	
+
 	totalDuration := time.Since(startTime)
 	log.Printf("📤 Response sent successfully")
-	log.Printf("⏱️  Total request time: %v (parse: %v, CLI: %v)", 
+	log.Printf("⏱️  Total request time: %v (parse: %v, CLI: %v)",
 		totalDuration, parseDuration, cliDuration)
 }

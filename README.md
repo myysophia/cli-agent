@@ -162,6 +162,7 @@ PORT=3000 ./claude-cli-gateway  # 环境变量指定端口
 ## Docker 部署
 
 > 镜像默认使用 `configs/configs.example.json` 作为 `configs.json`，建议通过挂载自定义配置覆盖。
+> 镜像内置安装 Claude Code、Codex 与 Cursor Agent（最新版本）。
 
 ### 构建镜像
 
@@ -182,6 +183,36 @@ docker run --rm -p 8080:8080 \
   -e PORT=8080 \
   dify-cli-gateway:local
 ```
+
+### MCP 与 Skills 挂载
+
+容器内默认使用以下路径读取 MCP 配置：
+- Cursor Agent: `/home/app/.cursor/mcp.json`
+- Claude CLI: `/home/app/.claude/settings.json`
+- Codex CLI: `/home/app/.codex/config.toml`
+
+容器内已安装 MCP 运行时依赖：
+- `uv/uvx`（用于 `mcp-server-fetch`、`mcp-server-filesystem` 等）
+- `python3`
+- `nodejs/npx`（用于 `@playwright/mcp` 等）
+
+建议把主机配置目录挂载进去，并把 Skills 目录也挂载到 `/app` 下：
+
+```bash
+docker run --rm -p 8080:8080 \
+  -v "$(pwd)/configs.json:/app/configs.json:ro" \
+  -v "$HOME/.cursor:/home/app/.cursor:ro" \
+  -v "$HOME/.cursor-agent:/home/app/.cursor-agent:ro" \
+  -v "$HOME/.claude:/home/app/.claude:ro" \
+  -v "$HOME/.codex:/home/app/.codex:ro" \
+  -v "$(pwd)/skills:/app/skills:ro" \
+  dify-cli-gateway:local
+```
+
+在 `configs.json` 的 `skills` 字段中请使用容器内路径，例如：`/app/skills` 或 `/app/reporter`。
+
+为防止泄露敏感信息，网关会自动屏蔽包含 `configs.json` 的 skills 路径（例如 `.` 或 `/app`）。
+请将 skills 指向更精确的子目录（如 `/app/skills`、`/app/reporter`、`/app/docs`）。
 
 ### GitHub Actions 自动构建镜像
 
@@ -892,12 +923,6 @@ curl -X POST http://localhost:8080/chat \
   }'
 ```
 
-## 相关文档
-
-- [Claude Skills 使用指南](./SKILLS.md) - 详细的 Skills 配置和使用说明
-- [配置示例](./configs.example.json) - 各种配置场景的示例
-- [更新日志](./CHANGELOG.md) - 版本更新记录
-
 ## 许可证
 
 MIT License
@@ -905,3 +930,9 @@ MIT License
 ## 贡献
 
 欢迎提交 Issue 和 Pull Request！
+### 内置 CLI 安装说明
+
+Dockerfile 默认安装（均为最新版本）：
+- Claude Code CLI（`claude`）: `npm install -g @anthropic-ai/claude-code`
+- Codex CLI（`codex`）: `npm install -g @openai/codex`
+- Cursor Agent CLI（`cursor-agent`）: `curl https://cursor.com/install -fsS | bash`

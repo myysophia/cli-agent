@@ -75,23 +75,22 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	if globalConfig != nil {
 		profile, err := globalConfig.getProfile(profileName)
 		if err == nil {
-			log.Printf("📋 Profile loaded: %+v", profile)
+			log.Printf("📋 Profile loaded: name=%s cli=%s model=%s skills=%d", profile.Name, profile.CLI, profile.Model, len(profile.Skills))
 			opts.Skills = profile.Skills
+			opts.Skills = filterSkillPaths(opts.Skills)
 			opts.Env = profile.Env
 			opts.Model = profile.Model
 
-			// 如果请求中没有提供 system prompt，则使用 profile 中的 system_prompt
-			if opts.SystemPrompt == "" && profile.SystemPrompt != "" {
-				opts.SystemPrompt = profile.SystemPrompt
-				log.Printf("🎯 [Profile] System prompt: %s", truncate(profile.SystemPrompt, 100))
-			}
-
 			log.Printf("📋 Model from config: %s (profile.Model=%s)", opts.Model, profile.Model)
+
+			opts.SystemPrompt = appendSystemPrompt(opts.SystemPrompt, profile.SystemPrompt)
 		} else {
 			log.Printf("⚠️  %v, using default environment", err)
 		}
 	}
-	
+
+	opts.SystemPrompt = appendSystemPrompt(opts.SystemPrompt, enforcedSystemPrompt)
+
 	// 标记这是 HTTP 请求，避免在非交互环境中使用 --resume
 	if opts.Env == nil {
 		opts.Env = make(map[string]string)
