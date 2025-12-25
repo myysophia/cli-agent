@@ -413,6 +413,12 @@ curl -N -X POST http://localhost:8080/chat \
 }
 ```
 
+可通过环境变量指定配置文件路径：
+
+```bash
+CONFIG_PATH=/path/to/configs.json ./start.sh
+```
+
 **配置字段说明**：
 - `name`: Profile 的显示名称
 - `cli`: 使用的 CLI 工具（"claude", "codex", "cursor", "gemini", "qwen"）
@@ -426,6 +432,39 @@ curl -N -X POST http://localhost:8080/chat \
   - `ANTHROPIC_BASE_URL`: API 端点地址
   - `ANTHROPIC_MODEL`: 默认模型
   - `ANTHROPIC_SMALL_FAST_MODEL`: 快速模型（可选）
+
+#### workflow_session 配置（可选）
+
+用于将 `workflow_run_id` 映射到 `session_id` 并支持并发安全。推荐在多实例部署时启用 Redis。
+
+```json
+{
+  "workflow_session": {
+    "mapping_ttl_minutes": 1440,
+    "lock_ttl_ms": 120000,
+    "lock_wait_timeout_ms": 120000,
+    "lock_retry_interval_ms": 200,
+    "redis": {
+      "addr": "127.0.0.1:6379",
+      "username": "",
+      "password": "",
+      "db": 0,
+      "dial_timeout_ms": 5000,
+      "read_timeout_ms": 3000,
+      "write_timeout_ms": 3000,
+      "pool_size": 10
+    }
+  }
+}
+```
+
+- `mapping_ttl_minutes`: 映射保活时间（分钟）
+- `lock_ttl_ms`: 锁 TTL（毫秒），需覆盖创建会话耗时
+- `lock_wait_timeout_ms`: 获取锁失败后的最大等待（毫秒）
+- `lock_retry_interval_ms`: 等待期间轮询间隔（毫秒）
+- `redis`: Redis 连接配置
+
+> Redis 不可用时会自动回退到进程内存存储（仅对单实例有效）。
 
 #### Claude Skills 配置示例
 

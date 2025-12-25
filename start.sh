@@ -5,11 +5,16 @@
 set -e
 
 # 解析命令行参数
-PORT="${PORT:-8080}"
+PORT="${PORT:-8081}"
+CONFIG_PATH="${CONFIG_PATH:-}"
 while [[ $# -gt 0 ]]; do
     case $1 in
         -p|--port)
             PORT="$2"
+            shift 2
+            ;;
+        -c|--config)
+            CONFIG_PATH="$2"
             shift 2
             ;;
         -h|--help)
@@ -17,14 +22,17 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  -p, --port PORT    Set the port number (default: 8080)"
+            echo "  -c, --config PATH  Specify configs.json path"
             echo "  -h, --help         Show this help message"
             echo ""
             echo "Environment variables:"
             echo "  PORT               Set the port number (default: 8080)"
+            echo "  CONFIG_PATH        Specify configs.json path"
             echo ""
             echo "Examples:"
             echo "  $0                 # Start on default port 8080"
             echo "  $0 -p 3000         # Start on port 3000"
+            echo "  $0 -c /path/to/configs.json"
             echo "  PORT=9000 $0       # Start on port 9000"
             exit 0
             ;;
@@ -56,6 +64,9 @@ fi
 
 # 启动服务
 export PORT="$PORT"
+if [[ -n "$CONFIG_PATH" ]]; then
+    export CONFIG_PATH="$CONFIG_PATH"
+fi
 echo "🌐 Starting gateway service on http://localhost:$PORT"
 echo "📝 Press Ctrl+C to stop"
 echo ""

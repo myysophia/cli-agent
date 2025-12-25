@@ -3,6 +3,22 @@
     "port": 8080,
     "host": "0.0.0.0"
   },
+  "workflow_session": {
+    "mapping_ttl_minutes": 1440,
+    "lock_ttl_ms": 120000,
+    "lock_wait_timeout_ms": 120000,
+    "lock_retry_interval_ms": 200,
+    "redis": {
+      "addr": "127.0.0.1:6379",
+      "username": "",
+      "password": "",
+      "db": 0,
+      "dial_timeout_ms": 5000,
+      "read_timeout_ms": 3000,
+      "write_timeout_ms": 3000,
+      "pool_size": 10
+    }
+  },
   "profiles": {
     "kimi": {
       "name": "Kimi",

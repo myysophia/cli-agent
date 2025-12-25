@@ -51,6 +51,10 @@ configs.json
 *.bak
 *.bak.*
 
+# Build cache
+.cache/
+.autonomous/
+
 # Generated files
 /generate-html
 release-notes.html

@@ -24,23 +24,23 @@ func setupLogging() (*os.File, error) {
 	if err := os.MkdirAll(logsDir, 0755); err != nil {
 		return nil, err
 	}
-	
+
 	// 生成日志文件名（按日期）
 	logFileName := filepath.Join(logsDir, time.Now().Format("2006-01-02")+".log")
-	
+
 	// 打开日志文件（追加模式）
 	logFile, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 设置日志同时输出到控制台和文件
 	multiWriter := io.MultiWriter(os.Stdout, logFile)
 	log.SetOutput(multiWriter)
-	
+
 	// 设置日志格式
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-	
+
 	return logFile, nil
 }
 
@@ -51,18 +51,19 @@ func main() {
 		log.Fatalf("Failed to setup logging: %v", err)
 	}
 	defer logFile.Close()
-	
+
 	log.Println("📁 Logging to file:", logFile.Name())
-	
+
 	// 初始化配置
 	if err := handler.InitConfig(); err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
-	
+	handler.InitWorkflowSessionManager()
+
 	// 使用 http.HandleFunc 注册 "/invoke" 路由到 handleInvoke
 	http.HandleFunc("/invoke", handler.HandleInvoke)
 	http.HandleFunc("/chat", handler.HandleChat)
-	
+
 	// Initialize Release Notes Service with config
 	rnConfig := handler.GetReleaseNotesConfig()
 	serviceConfig := release_notes.ServiceConfig{
@@ -72,7 +73,7 @@ func main() {
 	}
 	releaseNotesService = release_notes.NewReleaseNotesService(serviceConfig)
 	releaseNotesHandler := handler.NewReleaseNotesHandler(releaseNotesService)
-	
+
 	// Register release notes routes
 	http.HandleFunc("/release-notes", func(w http.ResponseWriter, r *http.Request) {
 		// Exact match for /release-notes (no trailing slash)
@@ -96,18 +97,18 @@ func main() {
 			releaseNotesHandler.HandleGetCLIReleaseNotes(w, r)
 		}
 	})
-	
+
 	// Start release notes service
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	go func() {
 		if err := releaseNotesService.Start(ctx); err != nil {
 			log.Printf("⚠️ Failed to start release notes service: %v", err)
 		}
 	}()
 	log.Println("📋 Release notes service initialized")
-	
+
 	// Setup graceful shutdown
 	go func() {
 		sigChan := make(chan os.Signal, 1)
@@ -122,10 +123,10 @@ func main() {
 		}
 		os.Exit(0)
 	}()
-	
+
 	// 获取服务器配置
 	serverConfig := handler.GetServerConfig()
-	
+
 	// 环境变量优先级最高
 	if envPort := os.Getenv("PORT"); envPort != "" {
 		fmt.Sscanf(envPort, "%d", &serverConfig.Port)
@@ -133,16 +134,16 @@ func main() {
 	if envHost := os.Getenv("HOST"); envHost != "" {
 		serverConfig.Host = envHost
 	}
-	
+
 	// 构建监听地址
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
-	
+
 	// 打印启动日志
 	log.Printf("🌐 Gateway service starting on %s", addr)
 	if serverConfig.Host == "0.0.0.0" {
 		log.Printf("📡 Access at: http://localhost:%d", serverConfig.Port)
 	}
-	
+
 	// 调用 http.ListenAndServe 启动服务器，使用 log.Fatal 包装以处理启动错误
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
