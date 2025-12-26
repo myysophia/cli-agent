@@ -7,6 +7,7 @@ set -e
 # 解析命令行参数
 PORT="${PORT:-8081}"
 CONFIG_PATH="${CONFIG_PATH:-}"
+ADMIN_UI_BUILD="${ADMIN_UI_BUILD:-1}"
 while [[ $# -gt 0 ]]; do
     case $1 in
         -p|--port)
@@ -17,22 +18,29 @@ while [[ $# -gt 0 ]]; do
             CONFIG_PATH="$2"
             shift 2
             ;;
+        --skip-admin-ui)
+            ADMIN_UI_BUILD=0
+            shift 1
+            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  -p, --port PORT    Set the port number (default: 8080)"
             echo "  -c, --config PATH  Specify configs.json path"
+            echo "      --skip-admin-ui  Skip admin UI build/export"
             echo "  -h, --help         Show this help message"
             echo ""
             echo "Environment variables:"
             echo "  PORT               Set the port number (default: 8080)"
             echo "  CONFIG_PATH        Specify configs.json path"
+            echo "  ADMIN_UI_BUILD     Build admin UI (1) or skip (0)"
             echo ""
             echo "Examples:"
             echo "  $0                 # Start on default port 8080"
             echo "  $0 -p 3000         # Start on port 3000"
             echo "  $0 -c /path/to/configs.json"
+            echo "  $0 --skip-admin-ui # Start without building admin UI"
             echo "  PORT=9000 $0       # Start on port 9000"
             exit 0
             ;;
@@ -54,8 +62,18 @@ if ! command -v go &> /dev/null; then
     exit 1
 fi
 
-# 检查是否已构建
-if [ ! -f "claude-cli-gateway" ]; then
+BUILD_REQUIRED=1
+# if [ ! -f "claude-cli-gateway" ]; then
+#     BUILD_REQUIRED=1
+# fi
+
+if [[ "$ADMIN_UI_BUILD" == "1" ]]; then
+    echo "🎨 Building admin UI..."
+    ./scripts/build-admin-ui.sh
+    BUILD_REQUIRED=1
+fi
+
+if [[ "$BUILD_REQUIRED" == "1" ]]; then
     echo "📦 Building project..."
     go build -o claude-cli-gateway ./cmd/server
     echo "✅ Build completed"

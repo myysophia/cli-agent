@@ -19,6 +19,13 @@
       "pool_size": 10
     }
   },
+  "admin_ui": {
+    "enabled": true,
+    "token": "your-admin-token-here",
+    "base_path": "/v1/admin",
+    "static_dir": "",
+    "cache_max_age_seconds": 3600
+  },
   "profiles": {
     "kimi": {
       "name": "Kimi",
@@ -82,6 +89,7 @@
     "qwen-with-reports": {
       "name": "Qwen with Research Reports",
       "cli": "claude",
+      "allowed_tools": ["fetch", "playwright"],
       "skills": ["./reporter"],
       "env": {
         "ANTHROPIC_API_KEY": "your-bailian-api-key-here",

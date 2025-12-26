@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -45,6 +46,16 @@ func setupLogging() (*os.File, error) {
 }
 
 func main() {
+	var configPath string
+	var configPathShort string
+	flag.StringVar(&configPath, "config", "", "configs.json path")
+	flag.StringVar(&configPathShort, "c", "", "configs.json path (shorthand)")
+	flag.Parse()
+
+	if configPath == "" {
+		configPath = configPathShort
+	}
+
 	// 设置日志
 	logFile, err := setupLogging()
 	if err != nil {
@@ -55,7 +66,7 @@ func main() {
 	log.Println("📁 Logging to file:", logFile.Name())
 
 	// 初始化配置
-	if err := handler.InitConfig(); err != nil {
+	if err := handler.InitConfigWithPath(configPath); err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 	handler.InitWorkflowSessionManager()
@@ -97,6 +108,21 @@ func main() {
 			releaseNotesHandler.HandleGetCLIReleaseNotes(w, r)
 		}
 	})
+
+	// Register admin UI routes
+	adminCfg := handler.GetAdminUIConfig()
+	if adminCfg.Enabled {
+		adminHandler, err := handler.NewAdminUIHandler(adminCfg)
+		if err != nil {
+			log.Printf("⚠️ Failed to initialize admin UI: %v", err)
+		} else {
+			http.Handle(adminCfg.BasePath+"/", adminHandler)
+			http.Handle(adminCfg.BasePath, adminHandler)
+			log.Printf("🛠️  Admin UI enabled at %s", adminCfg.BasePath)
+		}
+	} else {
+		log.Printf("ℹ️  Admin UI disabled")
+	}
 
 	// Start release notes service
 	ctx, cancel := context.WithCancel(context.Background())

@@ -63,3 +63,25 @@ docs/*
 scripts/prompts.json
 openapi.json
 .cursor/rules/stock-playbook.mdc
+
+# Admin UI
+web/admin-ui/
+internal/handler/admin_ui_static/
+
+# Build artifacts
+claude-cli-gateway
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Local configs
+configs.json
+.env
+*.env.local
+
+# Scripts generated files
+scripts/qa.txt
+
+# Workflow session data
+data/

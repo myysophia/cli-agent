@@ -40,8 +40,8 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	// 确定使用的 CLI 工具
 	if cliName != "" {
 		cliSource = "request"
-	} else if globalConfig != nil {
-		profile, err := globalConfig.getProfile(profileName)
+	} else {
+		profile, err := GetProfile(profileName)
 		if err == nil && profile.CLI != "" {
 			cliName = profile.CLI
 			cliSource = "profile"
@@ -72,21 +72,22 @@ func runCLI(cliName string, prompt string, systemPrompt string, profileName stri
 	}
 
 	// 从配置中获取额外选项
-	if globalConfig != nil {
-		profile, err := globalConfig.getProfile(profileName)
-		if err == nil {
-			log.Printf("📋 Profile loaded: name=%s cli=%s model=%s skills=%d", profile.Name, profile.CLI, profile.Model, len(profile.Skills))
-			opts.Skills = profile.Skills
-			opts.Skills = filterSkillPaths(opts.Skills)
-			opts.Env = profile.Env
-			opts.Model = profile.Model
-
-			log.Printf("📋 Model from config: %s (profile.Model=%s)", opts.Model, profile.Model)
-
-			opts.SystemPrompt = appendSystemPrompt(opts.SystemPrompt, profile.SystemPrompt)
-		} else {
-			log.Printf("⚠️  %v, using default environment", err)
+	profile, err := GetProfile(profileName)
+	if err == nil {
+		log.Printf("📋 Profile loaded: name=%s cli=%s model=%s skills=%d", profile.Name, profile.CLI, profile.Model, len(profile.Skills))
+		opts.Skills = profile.Skills
+		opts.Skills = filterSkillPaths(opts.Skills)
+		opts.Env = profile.Env
+		opts.Model = profile.Model
+		if len(opts.AllowedTools) == 0 && len(profile.AllowedTools) > 0 {
+			opts.AllowedTools = profile.AllowedTools
 		}
+
+		log.Printf("📋 Model from config: %s (profile.Model=%s)", opts.Model, profile.Model)
+
+		opts.SystemPrompt = appendSystemPrompt(opts.SystemPrompt, profile.SystemPrompt)
+	} else {
+		log.Printf("⚠️  %v, using default environment", err)
 	}
 
 	opts.SystemPrompt = appendSystemPrompt(opts.SystemPrompt, enforcedSystemPrompt)

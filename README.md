@@ -47,6 +47,12 @@
 - 💾 **缓存机制**：内存缓存 + 文件持久化
 - ✅ **只显示正式版本**：自动过滤 alpha、beta、nightly、preview 等版本
 
+### Admin UI 后台管理
+- 🧭 **统一入口**：`/v1/admin`（默认）
+- 🔐 **Token 认证**：仅支持 Token 访问（Header / Query / Cookie）
+- 🧩 **内置前端**：Next.js 静态导出，Go embed 内置资源
+- 🔧 **可选外部静态目录**：通过 `ADMIN_UI_STATIC_DIR` 指定本地构建产物
+
 ### Cursor Agent CI 集成
 - 🤖 **自动化测试**：使用 Cursor Agent CLI 进行 AI 驱动的代码分析
 - 📊 **定时运行**：每天自动运行测试任务
@@ -144,12 +150,15 @@ go build -o claude-cli-gateway
 # 方式一：使用启动脚本（推荐）
 ./start.sh                    # 默认端口 8080
 ./start.sh -p 3000           # 自定义端口 3000
+./start.sh --skip-admin-ui   # 跳过 Admin UI 构建
 
 # 方式二：使用环境变量
 PORT=9000 ./start.sh         # 端口 9000
+ADMIN_UI_BUILD=0 ./start.sh  # 跳过 Admin UI 构建
 
 # 方式三：直接运行
-./claude-cli-gateway         # 使用配置文件或默认端口
+./claude-cli-gateway           # 使用配置文件或默认端口
+./claude-cli-gateway -c ./configs/configs.json  # 指定 configs.json 路径
 PORT=3000 ./claude-cli-gateway  # 环境变量指定端口
 ```
 
@@ -158,6 +167,47 @@ PORT=3000 ./claude-cli-gateway  # 环境变量指定端口
 **端口配置优先级**: 环境变量 > 配置文件 > 默认值(8080)
 
 详细配置请查看：[端口配置指南](docs/PORT_CONFIGURATION.md)
+
+### Admin UI 启动与构建
+
+- Admin UI 默认挂载在 `http://localhost:8080/v1/admin`
+- `start.sh` 默认会执行 `./scripts/build-admin-ui.sh` 并重新构建 Go 二进制
+- 如需跳过 Admin UI 构建，可使用 `--skip-admin-ui` 或 `ADMIN_UI_BUILD=0`
+
+### Admin UI 配置管理 API
+
+Admin UI 提供配置查询与热加载接口（已脱敏，不会回传敏感值）。
+
+- `GET /v1/admin/api/config`：获取当前 configs.json（脱敏）
+- `POST /v1/admin/api/config`：更新配置并热加载（完整 JSON）
+- `POST /v1/admin/api/config/reload`：从磁盘重新加载配置
+
+注意：`server`、`release_notes`、`admin_ui.base_path/static_dir` 等变更仍需重启生效。
+
+### MCP 配置管理（Cursor）
+
+Admin UI 支持管理 Cursor/Claude MCP 配置。
+
+Cursor（默认读取 `~/.cursor/mcp.json`）：
+- `GET /v1/admin/api/mcp/cursor`：获取 MCP Servers 列表（env 脱敏）
+- `POST /v1/admin/api/mcp/cursor`：新增 MCP Server
+- `PUT /v1/admin/api/mcp/cursor/{name}`：更新 MCP Server
+- `DELETE /v1/admin/api/mcp/cursor/{name}`：删除 MCP Server
+
+Claude（默认读取 `~/.claude/settings.json`）：
+- `GET /v1/admin/api/mcp/claude`：获取 MCP Servers 列表（env 脱敏）
+- `POST /v1/admin/api/mcp/claude`：新增 MCP Server
+- `PUT /v1/admin/api/mcp/claude/{name}`：更新 MCP Server
+- `DELETE /v1/admin/api/mcp/claude/{name}`：删除 MCP Server
+
+支持通过环境变量指定路径：
+
+```bash
+ADMIN_MCP_CURSOR_PATH=/path/to/mcp.json
+CURSOR_MCP_PATH=/path/to/mcp.json
+ADMIN_MCP_CLAUDE_PATH=/path/to/settings.json
+CLAUDE_MCP_PATH=/path/to/settings.json
+```
 
 ## Docker 部署
 
@@ -423,6 +473,7 @@ CONFIG_PATH=/path/to/configs.json ./start.sh
 - `name`: Profile 的显示名称
 - `cli`: 使用的 CLI 工具（"claude", "codex", "cursor", "gemini", "qwen"）
 - `model`: 模型名称（可选，如 "gpt-5.1", "sonnet-4", "gemini-2.5-pro"）
+- `allowed_tools`: 允许使用的 MCP 工具列表（可选，仅 Claude CLI 支持）
 - `skills`: Claude Skills 列表（可选，仅 Claude CLI 支持）
   - 可以是目录路径或文件路径
   - Claude 会读取这些路径下的内容作为上下文
@@ -465,6 +516,38 @@ CONFIG_PATH=/path/to/configs.json ./start.sh
 - `redis`: Redis 连接配置
 
 > Redis 不可用时会自动回退到进程内存存储（仅对单实例有效）。
+
+#### admin_ui 配置（可选）
+
+用于启用内置 Admin UI，建议使用 Token 保护访问。
+
+```json
+{
+  "admin_ui": {
+    "enabled": true,
+    "token": "your-admin-token",
+    "base_path": "/v1/admin",
+    "static_dir": "",
+    "cache_max_age_seconds": 3600
+  }
+}
+```
+
+- `enabled`: 是否启用后台 UI（可选，未设置时会根据 token 自动开启）
+- `token`: 访问 Token（必填，空则强制禁用）
+- `base_path`: 路由前缀（默认 `/v1/admin`）
+- `static_dir`: 本地静态资源目录（可选，优先于 embed）
+- `cache_max_age_seconds`: 静态资源缓存秒数（默认 3600）
+
+支持环境变量覆盖：
+
+```bash
+ADMIN_UI_ENABLED=true
+ADMIN_UI_TOKEN=your-admin-token
+ADMIN_UI_BASE_PATH=/v1/admin
+ADMIN_UI_STATIC_DIR=/path/to/admin-ui/out
+ADMIN_UI_CACHE_MAX_AGE=3600
+```
 
 #### Claude Skills 配置示例
 
