@@ -239,7 +239,7 @@
     "lock_wait_timeout_ms": 120000,
     "lock_retry_interval_ms": 200,
     "redis": {
-      "addr": "120.55.180.232:16379",
+      "addr": "${WORKFLOW_REDIS_ADDR}",
       "username": "${WORKFLOW_REDIS_USERNAME}",
       "password": "${WORKFLOW_REDIS_PASSWORD}",
       "db": 3,

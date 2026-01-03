@@ -279,6 +279,7 @@ func applyEnvOverrides(cfg *Config) {
 	}
 
 	if cfg.WorkflowSession != nil && cfg.WorkflowSession.Redis != nil {
+		cfg.WorkflowSession.Redis.Addr = resolveEnvPlaceholder(cfg.WorkflowSession.Redis.Addr)
 		cfg.WorkflowSession.Redis.Username = resolveEnvPlaceholder(cfg.WorkflowSession.Redis.Username)
 		cfg.WorkflowSession.Redis.Password = resolveEnvPlaceholder(cfg.WorkflowSession.Redis.Password)
 	}
