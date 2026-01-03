@@ -83,6 +83,7 @@ var (
 	globalConfigPath     string
 	globalConfigLoadedAt time.Time
 	globalConfigMu       sync.RWMutex
+	dotenvOnce           sync.Once
 )
 
 // loadConfig 加载配置文件
@@ -147,6 +148,8 @@ func loadConfigToGlobal(configPath string, strict bool) error {
 		configPath = "configs.json"
 	}
 
+	loadDotEnv()
+
 	// 检查配置文件是否存在
 	if !fileExists(configPath) {
 		if strict {
@@ -161,6 +164,8 @@ func loadConfigToGlobal(configPath string, strict bool) error {
 	if err != nil {
 		return err
 	}
+
+	applyEnvOverrides(config)
 
 	setGlobalConfig(config, configPath, time.Now())
 	log.Printf("✅ Loaded config with %d profiles, default: %s", len(config.Profiles), config.Default)
@@ -201,6 +206,106 @@ func loadConfigToGlobal(configPath string, strict bool) error {
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+func loadDotEnv() {
+	dotenvOnce.Do(func() {
+		path := ".env"
+		if !fileExists(path) {
+			return
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			log.Printf("⚠️  Failed to read .env: %v", err)
+			return
+		}
+
+		lines := strings.Split(string(data), "\n")
+		loaded := 0
+		for _, line := range lines {
+			key, value, ok := parseEnvLine(line)
+			if !ok {
+				continue
+			}
+			if _, exists := os.LookupEnv(key); exists {
+				continue
+			}
+			if err := os.Setenv(key, value); err == nil {
+				loaded++
+			}
+		}
+
+		if loaded > 0 {
+			log.Printf("✅ Loaded .env with %d variables", loaded)
+		}
+	})
+}
+
+func parseEnvLine(line string) (string, string, bool) {
+	trimmed := strings.TrimSpace(line)
+	if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+		return "", "", false
+	}
+	if strings.HasPrefix(trimmed, "export ") {
+		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "export "))
+	}
+
+	parts := strings.SplitN(trimmed, "=", 2)
+	if len(parts) != 2 {
+		return "", "", false
+	}
+
+	key := strings.TrimSpace(parts[0])
+	value := strings.TrimSpace(parts[1])
+	if key == "" {
+		return "", "", false
+	}
+	if len(value) >= 2 {
+		if (value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'') {
+			value = value[1 : len(value)-1]
+		}
+	}
+
+	return key, value, true
+}
+
+func applyEnvOverrides(cfg *Config) {
+	if cfg == nil {
+		return
+	}
+
+	if cfg.AdminUI != nil {
+		cfg.AdminUI.Token = resolveEnvPlaceholder(cfg.AdminUI.Token)
+	}
+
+	if cfg.WorkflowSession != nil && cfg.WorkflowSession.Redis != nil {
+		cfg.WorkflowSession.Redis.Username = resolveEnvPlaceholder(cfg.WorkflowSession.Redis.Username)
+		cfg.WorkflowSession.Redis.Password = resolveEnvPlaceholder(cfg.WorkflowSession.Redis.Password)
+	}
+
+	for name, profile := range cfg.Profiles {
+		if profile.Env != nil {
+			for key, value := range profile.Env {
+				resolved := resolveEnvPlaceholder(value)
+				if resolved == "" && value == "" {
+					if envValue := os.Getenv(key); envValue != "" {
+						resolved = envValue
+					}
+				}
+				profile.Env[key] = resolved
+			}
+		}
+		cfg.Profiles[name] = profile
+	}
+}
+
+func resolveEnvPlaceholder(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if strings.HasPrefix(trimmed, "${") && strings.HasSuffix(trimmed, "}") {
+		key := strings.TrimSuffix(strings.TrimPrefix(trimmed, "${"), "}")
+		return os.Getenv(key)
+	}
+	return value
 }
 
 // GetReleaseNotesConfig 返回 release notes 配置，如果未配置则返回默认值

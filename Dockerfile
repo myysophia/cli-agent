@@ -25,7 +25,7 @@ RUN apk add --no-cache ca-certificates curl bash tar nodejs npm python3 \
 
 WORKDIR /app
 COPY --from=builder /out/claude-cli-gateway ./claude-cli-gateway
-COPY configs/configs.example.json ./configs.json
+COPY configs/configs.json ./configs.json
 COPY reporter ./reporter
 COPY web/templates ./templates
 

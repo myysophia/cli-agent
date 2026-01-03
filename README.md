@@ -95,7 +95,6 @@ cli-agent/
 │       └── release_notes.html   # Release Notes 查看器
 ├── configs/                      # 配置文件
 │   ├── configs.json             # 当前配置
-│   └── configs.example.json     # 配置示例
 ├── scripts/                      # 工具脚本
 ├── docs/                         # 文档
 │   ├── CHANGELOG.md             # 更新日志
@@ -211,7 +210,7 @@ CLAUDE_MCP_PATH=/path/to/settings.json
 
 ## Docker 部署
 
-> 镜像默认使用 `configs/configs.example.json` 作为 `configs.json`，建议通过挂载自定义配置覆盖。
+> 镜像默认使用 `configs/configs.json` 作为配置文件，建议通过挂载自定义配置覆盖。
 > 镜像内置安装 Claude Code、Codex 与 Cursor Agent（最新版本）。
 
 ### 构建镜像
@@ -428,7 +427,7 @@ curl -N -X POST http://localhost:8080/chat \
 
 #### 配置文件格式
 
-创建 `configs.json` 文件（参考 `configs.example.json`）：
+创建 `configs.json` 文件（敏感信息请改为 `.env` 变量占位符）：
 
 ```json
 {
@@ -437,7 +436,7 @@ curl -N -X POST http://localhost:8080/chat \
       "name": "MiniMax",
       "env": {
         "ANTHROPIC_BASE_URL": "https://api.minimaxi.com/anthropic",
-        "ANTHROPIC_AUTH_TOKEN": "your-token",
+        "ANTHROPIC_AUTH_TOKEN": "${MINIMAX_ANTHROPIC_AUTH_TOKEN}",
         "ANTHROPIC_MODEL": "MiniMax-M2"
       }
     },
@@ -445,14 +444,14 @@ curl -N -X POST http://localhost:8080/chat \
       "name": "智谱 GLM",
       "env": {
         "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
-        "ANTHROPIC_AUTH_TOKEN": "your-token"
+        "ANTHROPIC_AUTH_TOKEN": "${GLM_ANTHROPIC_AUTH_TOKEN}"
       }
     },
     "qwen": {
       "name": "阿里百炼 Qwen",
       "cli": "claude",
       "env": {
-        "ANTHROPIC_API_KEY": "your-bailian-api-key",
+        "ANTHROPIC_API_KEY": "${QWEN_ANTHROPIC_API_KEY}",
         "ANTHROPIC_BASE_URL": "https://dashscope.aliyuncs.com/apps/anthropic",
         "ANTHROPIC_MODEL": "qwen3-max",
         "ANTHROPIC_SMALL_FAST_MODEL": "qwen-flash"
@@ -462,6 +461,8 @@ curl -N -X POST http://localhost:8080/chat \
   "default": "minimax"
 }
 ```
+
+支持自动加载项目根目录的 `.env` 文件（不会覆盖已存在的环境变量）。
 
 可通过环境变量指定配置文件路径：
 

@@ -1,0 +1,67 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "memory-system": {
+      "command": "uvx",
+      "args": [
+        "--python",
+        "3.12.7",
+        "iflow-mcp_memory-system@latest",
+        "--workspace-path",
+        "/Users/shaoqing/cli/deepresearch/.iflow/memory"
+      ]
+    },
+    "python-execute-server": {
+      "command": "uvx",
+      "args": [
+        "--python",
+        "3.12.7",
+        "iflow-mcp_python-execute-server@latest"
+      ]
+    },
+    "docx-edit-server": {
+      "command": "uvx",
+      "args": [
+        "--python",
+        "3.12.7",
+        "iflow-mcp_docx-edit-server@latest",
+        "--workspace-path",
+        "/Users/shaoqing/cli/deepresearch/.iflow/memory"
+      ]
+    },
+    "excel-edit-server": {
+      "command": "uvx",
+      "args": [
+        "--python",
+        "3.12.7",
+        "iflow-mcp_excel-edit-server@latest",
+        "--workspace-path",
+        "/Users/shaoqing/cli/deepresearch/.iflow/memory"
+      ]
+    },
+    "mcp-show2user": {
+      "command": "uvx",
+      "args": [
+        "--python",
+        "3.12.7",
+        "iflow-mcp_show2user@latest"
+      ]
+    },
+    "image-search": {
+      "command": "uvx",
+      "args": [
+        "--python",
+        "3.12.7",
+        "iflow-mcp_image-search@latest",
+        "--workspace-path",
+        "/Users/shaoqing/cli/deepresearch/.iflow/memory"
+      ]
+    }
+  }
+}

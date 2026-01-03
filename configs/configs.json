@@ -1,0 +1,258 @@
+{
+  "server": {
+    "port": 8081,
+    "host": "0.0.0.0"
+  },
+  "profiles": {
+    "claude-mirror": {
+      "name": "Claude Mirror",
+      "cli": "claude",
+      "env": {
+        "ANTHROPIC_API_KEY": "${CLAUDE_MIRROR_ANTHROPIC_API_KEY}",
+        "ANTHROPIC_AUTH_TOKEN": "${CLAUDE_MIRROR_ANTHROPIC_AUTH_TOKEN}",
+        "ANTHROPIC_BASE_URL": "https://api.codemirror.codes/"
+      }
+    },
+    "codex": {
+      "name": "OpenAI Codex (GPT-5.1)",
+      "cli": "codex",
+      "env": {}
+    },
+    "cursor": {
+      "name": "Cursor Agent",
+      "cli": "cursor",
+      "model": "sonnet-4.5-thinking",
+      "env": {}
+    },
+    "cursor-gpt5": {
+      "name": "Cursor Agent (GPT-5.1)",
+      "cli": "cursor",
+      "model": "gpt-5.1-hight",
+      "env": {}
+    },
+    "gemini": {
+      "name": "Google Gemini",
+      "cli": "gemini",
+      "env": {}
+    },
+    "gemini-pro": {
+      "name": "Gemini 2.5 Pro",
+      "cli": "gemini",
+      "model": "gemini-2.5-pro",
+      "env": {}
+    },
+    "glm": {
+      "name": "智谱 GLM",
+      "cli": "claude",
+      "model": "glm-4.7",
+      "system_prompt": "你好，我是您的AI助手",
+      "env": {
+        "ANTHROPIC_AUTH_TOKEN": "${GLM_ANTHROPIC_AUTH_TOKEN}",
+        "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+        "API_TIMEOUT_MS": "3000000",
+        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+        "HTTP_REQUEST": "true"
+      }
+    },
+    "investment-expert": {
+      "name": "投资分析专家",
+      "cli": "claude",
+      "skills": [
+        "./.claude/skills/investment-analyst"
+      ],
+      "system_prompt": "你是一位专业的投资分析师，专注于股票市场分析。你的职责是提供客观、全面的分析，帮助用户理解投资机会和风险。你从不提供具体的买卖建议，而是解释各种可能的情景和风险。使用 .claude/skills/investment-analyst 中的7个核心能力进行分析：1) 每日市场概览 2) 基本面分析 3) 技术分析 4) 策略模拟 5) 风险管理 6) 股票筛选 7) 新闻影响分析。始终强调投资风险，建议用户根据自身情况做出决策。",
+      "env": {
+        "ANTHROPIC_AUTH_TOKEN": "${INVESTMENT_EXPERT_ANTHROPIC_AUTH_TOKEN}",
+        "ANTHROPIC_BASE_URL": "https://api.xiaomimimo.com/anthropic",
+        "ANTHROPIC_MODEL": "mimo-v2-flash",
+        "ANTHROPIC_SMALL_FAST_MODEL": "mimo-v2-flash"
+      }
+    },
+    "investment-expert-opus": {
+      "name": "投资分析专家 (Opus)",
+      "cli": "claude",
+      "skills": [
+        "./.claude/skills/investment-analyst"
+      ],
+      "system_prompt": "你是一位资深投资分析师，拥有丰富的股票市场分析经验。你的核心原则：1) 提供客观分析，不做投资建议 2) 强调风险评估 3) 使用7个核心分析框架 4) 帮助用户理解市场动态和投资逻辑。你可以使用 .claude/skills/investment-analyst 中的工具进行深度分析。始终提醒用户：投资有风险，入市需谨慎，建议咨询专业投资顾问。",
+      "env": {
+        "ANTHROPIC_AUTH_TOKEN": "${INVESTMENT_EXPERT_OPUS_ANTHROPIC_AUTH_TOKEN}",
+        "ANTHROPIC_BASE_URL": "https://api.xiaomimimo.com/anthropic",
+        "ANTHROPIC_MODEL": "mimo-v2-flash",
+        "ANTHROPIC_SMALL_FAST_MODEL": "mimo-v2-flash"
+      }
+    },
+    "iflow-default": {
+      "name": "iFlow Default",
+      "cli": "iflow",
+      "extensions": {
+        "custom-output": {
+          "enabled": true,
+          "priority": 1,
+          "config": {
+            "format": "markdown",
+            "max_length": "10000"
+          }
+        }
+      },
+      "cache": {
+        "enabled": true,
+        "ttl_minutes": 60,
+        "max_size_mb": 100,
+        "strategy": "lru"
+      },
+      "middleware": [
+        {
+          "name": "logging",
+          "enabled": true
+        },
+        {
+          "name": "metrics",
+          "enabled": true
+        },
+        {
+          "name": "retry",
+          "enabled": true,
+          "config": {
+            "max_retries": "3"
+          }
+        }
+      ],
+      "env": {
+        "IFLOW_API_KEY": "${IFLOW_API_KEY}",
+        "IFLOW_TIMEOUT": "1000",
+        "ANTHROPIC_MODEL": "glm-4.7"
+      }
+    },
+    "kimi": {
+      "name": "Kimi",
+      "cli": "claude",
+      "env": {
+        "ANTHROPIC_AUTH_TOKEN": "${KIMI_ANTHROPIC_AUTH_TOKEN}",
+        "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding/",
+        "ANTHROPIC_MODEL": "kimi-for-coding",
+        "ANTHROPIC_SMALL_FAST_MODEL": "kimi-for-coding"
+      }
+    },
+    "kimi-k2": {
+      "name": "Kimi K2 Thinking",
+      "cli": "claude",
+      "env": {
+        "ANTHROPIC_AUTH_TOKEN": "${KIMI_K2_ANTHROPIC_AUTH_TOKEN}",
+        "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding/",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "kimi-k2-thinking",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "kimi-k2-thinking",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "kimi-k2-thinking",
+        "ANTHROPIC_MODEL": "kimi-k2-thinking",
+        "ANTHROPIC_SMALL_FAST_MODEL": "kimi-k2-thinking"
+      }
+    },
+    "mimo": {
+      "name": "MiMo",
+      "cli": "claude",
+      "env": {
+        "ANTHROPIC_AUTH_TOKEN": "${MIMO_ANTHROPIC_AUTH_TOKEN}",
+        "ANTHROPIC_BASE_URL": "https://api.xiaomimimo.com/anthropic",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "mimo-v2-flash",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "mimo-v2-flash",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "mimo-v2-flash",
+        "ANTHROPIC_MODEL": "mimo-v2-flash",
+        "ANTHROPIC_SMALL_FAST_MODEL": "mimo-v2-flash",
+        "HTTP_REQUEST": "true"
+      }
+    },
+    "minimax": {
+      "name": "MiniMax",
+      "cli": "claude",
+      "env": {
+        "ANTHROPIC_AUTH_TOKEN": "${MINIMAX_ANTHROPIC_AUTH_TOKEN}",
+        "ANTHROPIC_BASE_URL": "https://api.minimaxi.com/anthropic",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "MiniMax-M2",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "MiniMax-M2",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "MiniMax-M2",
+        "ANTHROPIC_MODEL": "MiniMax-M2",
+        "ANTHROPIC_SMALL_FAST_MODEL": "MiniMax-M2",
+        "API_TIMEOUT_MS": "3000000",
+        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+      }
+    },
+    "qwen": {
+      "name": "阿里百炼 Qwen",
+      "cli": "claude",
+      "env": {
+        "ANTHROPIC_API_KEY": "${QWEN_ANTHROPIC_API_KEY}",
+        "ANTHROPIC_BASE_URL": "https://dashscope.aliyuncs.com/apps/anthropic",
+        "ANTHROPIC_MODEL": "qwen3-max",
+        "ANTHROPIC_SMALL_FAST_MODEL": "qwen3-max"
+      }
+    },
+    "qwen-cli": {
+      "name": "Qwen Code CLI",
+      "cli": "qwen",
+      "env": {}
+    },
+    "qwen-cli-max": {
+      "name": "Qwen Code CLI (qwen3-max)",
+      "cli": "qwen",
+      "model": "qwen3-max",
+      "env": {}
+    },
+    "qwen-with-reports": {
+      "name": "Qwen with Research Reports",
+      "cli": "claude",
+      "skills": [
+        "./reporter"
+      ],
+      "env": {
+        "ANTHROPIC_API_KEY": "${QWEN_WITH_REPORTS_ANTHROPIC_API_KEY}",
+        "ANTHROPIC_BASE_URL": "https://dashscope.aliyuncs.com/apps/anthropic",
+        "ANTHROPIC_MODEL": "qwen3-max",
+        "ANTHROPIC_SMALL_FAST_MODEL": "qwen3-max"
+      }
+    }
+  },
+  "default": "iflow-default",
+  "extensions": {
+    "registry": {
+      "auto_load": true,
+      "paths": [
+        "./extensions",
+        "./plugins"
+      ],
+      "security": {
+        "verify_signatures": true,
+        "sandbox": true
+      }
+    }
+  },
+  "performance": {
+    "max_concurrent": 100,
+    "connection_pool": 50,
+    "cache": {
+      "enabled": true,
+      "max_entries": 1000
+    }
+  },
+  "workflow_session": {
+    "mapping_ttl_minutes": 1440,
+    "lock_ttl_ms": 120000,
+    "lock_wait_timeout_ms": 120000,
+    "lock_retry_interval_ms": 200,
+    "redis": {
+      "addr": "120.55.180.232:16379",
+      "username": "${WORKFLOW_REDIS_USERNAME}",
+      "password": "${WORKFLOW_REDIS_PASSWORD}",
+      "db": 3,
+      "dial_timeout_ms": 5000,
+      "read_timeout_ms": 3000,
+      "write_timeout_ms": 3000,
+      "pool_size": 10
+    }
+  },
+  "admin_ui": {
+    "enabled": true,
+    "token": "${ADMIN_UI_TOKEN}",
+    "base_path": "/v1/admin",
+    "cache_max_age_seconds": 3600
+  }
+}
