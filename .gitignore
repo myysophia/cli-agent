@@ -59,9 +59,7 @@ __pycache__/
 /generate-html
 release-notes.html
 gh-pages/
-docs/CHANGELOG.md
-docs/PORT_CONFIGURATION.md
-docs/SKILLS.md
+docs/*
 scripts/prompts.json
 openapi.json
 .cursor/rules/stock-playbook.mdc

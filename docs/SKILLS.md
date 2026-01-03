@@ -84,7 +84,7 @@ Claude Skills 是 Claude CLI 的一个强大功能，允许 Claude 访问本地�
       "cli": "claude",
       "skills": ["./reporter", "./papers"],
       "env": {
-        "ANTHROPIC_API_KEY": "your-key",
+        "ANTHROPIC_API_KEY": "${QWEN_BASIC_ANTHROPIC_API_KEY}",
         "ANTHROPIC_BASE_URL": "https://dashscope.aliyuncs.com/apps/anthropic",
         "ANTHROPIC_MODEL": "qwen3-max"
       }
@@ -367,4 +367,4 @@ Claude Skills 支持多种文件格式：
 
 - [Claude CLI 官方文档](https://docs.anthropic.com/claude/docs/claude-cli)
 - [项目 README](./README.md)
-- [配置示例](./configs.example.json)
+- [配置示例](../configs/configs.json)

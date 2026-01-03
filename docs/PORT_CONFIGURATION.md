@@ -270,6 +270,6 @@ curl http://your-ip:8080/release-notes
 
 ## 📚 相关文档
 
-- [配置文件说明](../configs/configs.example.json)
+- [配置文件说明](../configs/configs.json)
 - [启动脚本](../start.sh)
 - [部署指南](./DEPLOYMENT.md)

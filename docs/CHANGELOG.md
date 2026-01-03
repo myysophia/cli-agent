@@ -11,7 +11,7 @@
 
 ### 配置文件
 
-创建 `configs.json`（参考 `configs.example.json`）：
+创建 `configs.json`（敏感信息建议使用 `.env` 变量占位符）：
 
 ```json
 {
