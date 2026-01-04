@@ -65,8 +65,8 @@ openapi.json
 .cursor/rules/stock-playbook.mdc
 
 # Admin UI
-web/admin-ui/
-internal/handler/admin_ui_static/
+#web/admin-ui/
+#internal/handler/admin_ui_static/
 
 # Build artifacts
 claude-cli-gateway
@@ -118,3 +118,9 @@ claude-flow
 hive-mind-prompt-*.txt
 *.xls
 TODO.md
+
+# Admin UI dependencies and build artifacts
+web/admin-ui/node_modules/
+web/admin-ui/.next/
+web/admin-ui/out
+internal/handler/admin_ui_static/
